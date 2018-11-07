@@ -97,7 +97,8 @@ def run_pcasystem(env: str, log_queue: Queue):
 	:param log_queue: logging queue to use
 	"""
 	# PCA
-	config_file = os.path.abspath(os.path.join('../../config', env, 'pca_system.json'))
+	current_dir = os.path.dirname(os.path.abspath(__file__))
+	config_file = os.path.abspath(os.path.join(current_dir, '../../config', env, 'test_system.json'))
 	pca_runtime = PCARuntime(log_queue, PCARuntime.load_pca(config_file))
 	pca_runtime.start()
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 	ProcessReady.setup_logging(log_runtime.log_queue)
 
 	# PCA
-	run_pcasystem('prod', log_runtime.log_queue)
+	run_pcasystem('test', log_runtime.log_queue)
 
 	# Stop logging process
 	log_runtime.stop()
