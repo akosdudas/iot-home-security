@@ -6,12 +6,11 @@ from imutils.object_detection import non_max_suppression
 
 from enum import Enum
 
+from people_detector import HOGDetector
+
 class ObjectType(Enum):
     OBJECT = 0
     HUMAN = 1
-
-hog = cv2.HOGDescriptor()
-hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
 class ImageObject:
 
@@ -25,6 +24,8 @@ class ImageObject:
         self.roi = self.get_roi(frame)
 
         self.unseen = 0
+
+        self.people_detector = HOGDetector()
 
     def get_roi(self, frame):
         x,y,u,v = self.get_rect()
@@ -88,16 +89,12 @@ class ImageObject:
 
     def detect_human(self):
         roi = self.roi.copy()
-        roi = imutils.resize(roi, width=max(64, min(100, roi.shape[1])))
-        roi = imutils.resize(roi, height=max(128, roi.shape[0]))
 
-        rects, weights = hog.detectMultiScale(roi, winStride=(4, 4), padding=(0, 0), scale = 1.05)
-
-        if not len(rects) > 0:
-            return False
-        else:
+        if self.people_detector.detect_human(roi):
             self.type = ObjectType.HUMAN
             return True
+        else:
+            return False
     
     def get_pose(self):
         x,y,w,h = self.get_rect_wh()
