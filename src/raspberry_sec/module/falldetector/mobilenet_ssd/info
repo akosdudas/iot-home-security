@@ -1,0 +1,14 @@
+Source of trained model
+https://github.com/chuanqi305/MobileNet-SSD?fbclid=IwAR0k8-AC6et-XuTdsIhLBh4CZwpaC1daCFuBe8ixc_oxaoeWLyaG9UAnebY
+
+Original - MobileNet SSD on TensorFlow
+https://github.com/tensorflow/models/tree/master/research/object_detection/g3doc
+
+Dataset used to train the model
+http://cocodataset.org/
+
+Ideas for the usage of MobileNet SSD taken from
+https://www.pyimagesearch.com/2017/09/11/object-detection-with-deep-learning-and-opencv/?fbclid=IwAR0nN2JtzJGzyaA_fn9ElrVEhRAbkkd1S8rfw1LQ0ouqwesDadUZDKniL4s
+
+Useful links
+http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/

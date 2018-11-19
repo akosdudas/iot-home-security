@@ -6,7 +6,7 @@ from imutils.object_detection import non_max_suppression
 
 from enum import Enum
 
-from people_detector import HOGDetector
+from people_detector import HOGDetector, MobileNetSSD
 
 class ObjectType(Enum):
     OBJECT = 0
@@ -25,7 +25,7 @@ class ImageObject:
 
         self.unseen = 0
 
-        self.people_detector = HOGDetector()
+        self.people_detector = MobileNetSSD()
 
     def get_roi(self, frame):
         x,y,u,v = self.get_rect()
@@ -33,6 +33,7 @@ class ImageObject:
         yR = max(0, y - ImageObject.PADDING)
         uR = min(frame.shape[1] - 1, u + ImageObject.PADDING)
         vR = min(frame.shape[0] - 1, v + ImageObject.PADDING)
+        return frame[yR:vR, xR:uR]
         try:
             roi = cv2.cvtColor(frame[yR:vR, xR:uR], cv2.COLOR_BGR2GRAY).copy()
         except:
@@ -90,10 +91,11 @@ class ImageObject:
     def detect_human(self):
         roi = self.roi.copy()
 
-        if self.people_detector.detect_human(roi):
+        if self.people_detector.detect_human(roi)[0]:
             self.type = ObjectType.HUMAN
             return True
         else:
+            self.TYPE = ObjectType.OBJECT
             return False
     
     def get_pose(self):
