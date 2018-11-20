@@ -8,6 +8,8 @@ from enum import Enum
 
 from people_detector import HOGDetector, MobileNetSSD
 
+from state_predictor import State, StatePredictor
+
 class ObjectType(Enum):
     OBJECT = 0
     HUMAN = 1
@@ -18,14 +20,28 @@ class ImageObject:
     PADDING = 30
 
     def __init__(self, obj_id, contour, frame):
-        self.id = obj_id
+        self.id = obj_id        
         self.contour = contour
         self.type = ObjectType.OBJECT
         self.roi = self.get_roi(frame)
 
         self.unseen = 0
+        self.people_detector = HOGDetector()
+        self.sp = StatePredictor()
 
-        self.people_detector = MobileNetSSD()
+    def update_state(self, contour, roi, obj_type):
+        self.contour = contour
+        self.roi = roi
+        self.unseen = 0
+        if not self.type == ObjectType.HUMAN:
+            self.type = obj_type
+
+    def predict_state(self):
+        cm = self.get_center_of_mass()
+        if cm == None:
+            rect = self.get_rect_wh()
+            cm = (rect[0] + rect[2]/2, rect[1] + rect[3]/2)
+        return self.sp.predict_state(State(cm[0], cm[1]))
 
     def get_roi(self, frame):
         x,y,u,v = self.get_rect()
@@ -124,6 +140,9 @@ class ImageObject:
             cv2.ellipse(frame, ellipse, (0,255,0), 2)
             pA, pB = self.get_line_repr()
             cv2.line(frame, pA, pB, (0,255,0), 1)
+        
+        predicted_state = self.predict_state()
+        cv2.circle(frame, (int(predicted_state[0]), int(predicted_state[1])), 10, (0,0,255), 2)
 
     def distance_square_from(self, other):
         cm_self = self.get_center_of_mass()

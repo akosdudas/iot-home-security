@@ -29,11 +29,7 @@ class Scene():
 
         if len(contain_list):
             min_dist_id = min(contain_list.items(), key = operator.itemgetter(1))[0]
-            self.objects[min_dist_id].unseen = 0
-            self.objects[min_dist_id].contour = new_obj.contour
-            self.objects[min_dist_id].roi = new_obj.roi
-            if(not self.objects[min_dist_id].type == ObjectType.HUMAN):
-                    self.objects[min_dist_id].type = new_obj.type
+            self.objects[min_dist_id].update_state(new_obj.contour, new_obj.roi, new_obj.type)
         else:
             new_obj.id = Scene.get_id()
             self.objects[new_obj.id] = new_obj
