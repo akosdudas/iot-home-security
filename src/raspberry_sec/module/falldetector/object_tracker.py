@@ -27,7 +27,7 @@ class ImageObject:
 
         self.unseen = 0
         self.people_detector = HOGDetector()
-        self.sp = StatePredictor()
+        self.sp = StatePredictor(initial_pred_state=self.get_state())
 
     def update_state(self, contour, roi, obj_type):
         self.contour = contour
@@ -37,11 +37,18 @@ class ImageObject:
             self.type = obj_type
 
     def predict_state(self):
+        return self.sp.predict_state(self.get_state())
+
+    def get_state(self):
         cm = self.get_center_of_mass()
         if cm == None:
             rect = self.get_rect_wh()
             cm = (rect[0] + rect[2]/2, rect[1] + rect[3]/2)
-        return self.sp.predict_state(State(cm[0], cm[1]))
+        x, y, w, h = self.get_rect_wh()
+        angle = self.get_angle()
+        if not angle:
+            angle = 0
+        return State(cm[0], cm[1], h, w, angle)
 
     def get_roi(self, frame):
         x,y,u,v = self.get_rect()
@@ -132,17 +139,14 @@ class ImageObject:
         else:
             obj_text = f"{self.id} OBJECT"
             color = (255,0,0)
-        x,y,u,v = self.get_rect()
-        cv2.rectangle(frame, (x, y), (u, v), color, 2)
+        (x,y,u,v) = self.get_rect()
         cv2.putText(frame, obj_text, (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.5 ,color,1,cv2.LINE_AA)
         ellipse = self.get_ellipse()
         if ellipse:
             cv2.ellipse(frame, ellipse, (0,255,0), 2)
-            pA, pB = self.get_line_repr()
-            cv2.line(frame, pA, pB, (0,255,0), 1)
-        
-        predicted_state = self.predict_state()
-        cv2.circle(frame, (int(predicted_state[0]), int(predicted_state[1])), 10, (0,0,255), 2)
+
+        self.get_state().draw(frame)
+        self.predict_state().draw(frame)
 
     def distance_square_from(self, other):
         cm_self = self.get_center_of_mass()

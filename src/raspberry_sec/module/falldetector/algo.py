@@ -69,7 +69,7 @@ while(1):
 
     cv2.imshow('f',mask)
     cv2.imshow('fr', frame)
-    k = cv2.waitKey(1) & 0xff
+    k = cv2.waitKey() & 0xff
     if k == 27:
         break
 
