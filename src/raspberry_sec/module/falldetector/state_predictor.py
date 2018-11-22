@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import operator
 
+from utils import StatePlotter
+
 class State:
     STATE_VARS = ['x', 'y', 'h', 'w', 'angle']
     DRAWING_COLORS = {
@@ -130,13 +132,17 @@ if __name__ == '__main__':
     sp = StatePredictor(
         State.from_np_array(arr)
         )
-    prs = [0]
+    prs = []
+    coor_hist = []
+    plotter = StatePlotter()
     for coor in coords:
         pr = sp.predict_state(
             State.from_np_array(np.ones(StatePredictor.MEAS_VECTOR_LEN, np.float32) * coor)
-            ).to_np_array()
-        prs.append(pr[0])
-    plt.plot(coords)
-    plt.plot(prs)
-    plt.show()
+            )
+        coor_hist.append(State.from_np_array(np.ones(StatePredictor.MEAS_VECTOR_LEN, dtype=np.float32) * coor))
+        prs.append(pr)
+        plotter.update_plot(prs, coor_hist)
+        import time
+        time.sleep(0.1)
+
     pass

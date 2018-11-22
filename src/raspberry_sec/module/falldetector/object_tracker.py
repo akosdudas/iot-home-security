@@ -10,6 +10,8 @@ from people_detector import HOGDetector, MobileNetSSD
 
 from state_predictor import State, StatePredictor
 
+#from utils import plotter
+
 class ObjectType(Enum):
     OBJECT = 0
     HUMAN = 1
@@ -29,12 +31,18 @@ class ImageObject:
         self.people_detector = HOGDetector()
         self.sp = StatePredictor(initial_pred_state=self.get_state())
 
+        self.state_history = [self.get_state()]
+        self.predict_state_history = [self.predict_state()]
+
     def update_state(self, contour, roi, obj_type):
         self.contour = contour
         self.roi = roi
         self.unseen = 0
         if not self.type == ObjectType.HUMAN:
             self.type = obj_type
+
+        self.state_history.append(self.get_state())
+        self.predict_state_history.append(self.predict_state())
 
     def predict_state(self):
         return self.sp.predict_state(self.get_state())
@@ -66,6 +74,10 @@ class ImageObject:
 
     def get_area(self):
         return cv2.contourArea(self.contour)
+
+    def get_rect_area(self):
+        x,y,w,h = self.get_rect_wh()
+        return w*h
 
     def get_center_of_mass(self):
         ellipse = self.get_ellipse()
@@ -145,8 +157,8 @@ class ImageObject:
         if ellipse:
             cv2.ellipse(frame, ellipse, (0,255,0), 2)
 
-        self.get_state().draw(frame)
-        self.predict_state().draw(frame)
+        self.state_history[-1].draw(frame)
+        self.predict_state_history[-1].draw(frame)
 
     def distance_square_from(self, other):
         cm_self = self.get_center_of_mass()
