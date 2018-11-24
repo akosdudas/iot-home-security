@@ -59,9 +59,8 @@ while(1):
             #print(f"HUMAN {i}")
             i += 1
         objects.append(obj)
-
-    for o in objects:
-        scene.add_object(o)
+        #scene.add_object(obj)
+    scene.update_objects(objects)
 
     for i, o in scene.objects.items():
         o.draw(frame)

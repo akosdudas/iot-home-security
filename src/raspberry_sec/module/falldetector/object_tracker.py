@@ -20,6 +20,8 @@ class ImageObject:
 
     # Padding to be added to all sides of the ROI for the object
     PADDING = 30
+    MATCH_AREA_TRESHOLD = 2
+
 
     def __init__(self, obj_id, contour, frame):
         self.id = obj_id        
@@ -34,12 +36,12 @@ class ImageObject:
         self.state_history = [self.get_state()]
         self.predict_state_history = [self.predict_state()]
 
-    def update_state(self, contour, roi, obj_type):
-        self.contour = contour
-        self.roi = roi
+    def update_state(self, matching_obj):
+        self.contour = matching_obj.contour
+        self.roi = matching_obj.roi
         self.unseen = 0
         if not self.type == ObjectType.HUMAN:
-            self.type = obj_type
+            self.type = matching_obj.type
 
         self.state_history.append(self.get_state())
         self.predict_state_history.append(self.predict_state())
@@ -174,5 +176,18 @@ class ImageObject:
         x,y,u,v = self.get_rect()
         return x < cm_other[0] < u and y < cm_other[1] < v 
 
-
+    def find_match_candidates(self, detected_objects: list):
+        candidates = []
+        predicted_state = self.predict_state_history[-1]
+        for obj in detected_objects:
+            area_ratio = float(predicted_state.get_area()) / obj.state_history[-1].get_area()
+            if area_ratio < ImageObject.MATCH_AREA_TRESHOLD and area_ratio > 1.0/ImageObject.MATCH_AREA_TRESHOLD:
+                candidates.append({"mc_obj": obj, "dist_sq": predicted_state.dist_square_from(obj.state_history[-1])})
+        return candidates
+        #return sorted(candidates, key=lambda k: k['dist_sq'])
+        
+    @staticmethod
+    def merge_objects(one, other):
+        # convexhull, approxpoly
+        pass
         

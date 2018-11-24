@@ -18,6 +18,15 @@ class State:
         for i, state_var in enumerate(State.STATE_VARS):
             self.__setattr__(state_var, args[i])
     
+    def get_area(self):
+        return self.x * self.y
+    
+    def dist_square_from(self, other):
+        dx = self.x - other.x
+        dy = self.y - other.y
+        return dx*dx + dy*dy
+
+
     def to_np_array(self):
         return np.array(
             [np.float32(self.__dict__[state_var]) for state_var in State.STATE_VARS], np.float32
