@@ -74,6 +74,18 @@ class Scene():
             match_canditates[:] = [m for m in match_canditates if not m['id'] == mc['id']]
             match_canditates[:] = [m for m in match_canditates if not m['mc_obj'] == mc['mc_obj']]
 
+
+        for unhandled_object in [self.objects[obj_id] for obj_id in self.objects.keys() if self.objects[obj_id].unseen > 0]:
+            # Get all new object detected contained by the projected state of the historic object
+            contained_objects = []
+            for detected in detected_objects_copy:
+                if unhandled_object.predict_state_history[-1].contains(detected.state_history[-1]):
+                    contained_objects.append(detected)
+            # Try to merge objects, fail if grows too big or stays to small
+
+            # If successful - Deregister used detected objects, state update of historic object  
+
+        # Register unmatched detected objects
         for new_obj in detected_objects_copy:
             new_obj.id = Scene.get_id()
             self.objects[new_obj.id] = new_obj

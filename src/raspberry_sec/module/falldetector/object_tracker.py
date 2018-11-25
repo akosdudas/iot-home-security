@@ -187,7 +187,29 @@ class ImageObject:
         #return sorted(candidates, key=lambda k: k['dist_sq'])
         
     @staticmethod
-    def merge_objects(one, other):
+    def merge_objects(objects: list, frame):
         # convexhull, approxpoly
-        pass
         
+        if not objects:
+            raise AttributeError('Cannot merge an empty list of ImageObjects')
+
+        # Merge object contours
+        merged_contours = np.concatenate([o.contour for o in objects])
+        hull = cv2.convexHull(merged_contours, returnPoints=True)
+        merged_object = ImageObject(0, hull, frame)
+        return merged_object
+        
+
+if __name__ == '__main__':
+    image_orig = cv2.imread('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/rand_images/German-Sheperd-Image-1-composite.jpg', cv2.IMREAD_COLOR)
+    image = cv2.cvtColor(image_orig, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(image, 127, 255, 0)
+    im2, contours, hierarchy = cv2.findContours(cv2.bitwise_not(thresh), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
+    objects = []
+    for c in contours:
+        objects.append(ImageObject(0, c, image_orig))
+    merged = ImageObject.merge_objects(objects, image_orig)
+    cv2.polylines(image_orig, [merged.contour], isClosed=True, color=(0,0,255), thickness=3)
+    cv2.imshow('test_image', image_orig)
+    cv2.waitKey()
+    cv2.destroyAllWindows()

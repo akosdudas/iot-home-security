@@ -19,7 +19,7 @@ class State:
             self.__setattr__(state_var, args[i])
     
     def get_area(self):
-        return self.x * self.y
+        return self.h * self.w
     
     def dist_square_from(self, other):
         dx = self.x - other.x
@@ -31,6 +31,10 @@ class State:
         return np.array(
             [np.float32(self.__dict__[state_var]) for state_var in State.STATE_VARS], np.float32
         )
+
+    # Return true if other is contained in the bounding rectange of self
+    def contains(self, other):
+        return (self.x - self.w/2.0) < other.x < (self.x + self.w/2.0) and (self.y - self.h/2.0) < other.y < (self.y + self.h/2.0)
 
     @staticmethod
     def from_np_array(input_array):
