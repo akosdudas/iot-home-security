@@ -43,7 +43,7 @@ class Scene():
         for i in expired_list:    
             del self.objects[i]
 
-    def update_objects(self, detected_objects: list):
+    def update_objects(self, detected_objects: list, frame):
         detected_objects_copy = detected_objects.copy()
         # Increase the age of all historical objects in the scene
         for i, obj in self.objects.items():
@@ -82,8 +82,12 @@ class Scene():
                 if unhandled_object.predict_state_history[-1].contains(detected.state_history[-1]):
                     contained_objects.append(detected)
             # Try to merge objects, fail if grows too big or stays to small
-
-            # If successful - Deregister used detected objects, state update of historic object  
+            if contained_objects:
+                merged_object = ImageObject.merge_objects(contained_objects, frame)
+                # If successful - Deregister used detected objects, state update of historic object  
+                unhandled_object.update_state(merged_object)
+                for o in contained_objects:
+                    detected_objects_copy.remove(o)
 
         # Register unmatched detected objects
         for new_obj in detected_objects_copy:

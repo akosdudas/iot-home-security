@@ -13,7 +13,7 @@ from utils import undistort_frame
 # Dataset - http://www.iro.umontreal.ca/~labimage/Dataset/
 
 
-cap = cv2.VideoCapture('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/chute02/cam8.avi')
+cap = cv2.VideoCapture('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/chute01/cam8.avi')
 #cap = cv2.VideoCapture(0)
 
 bs = CNT()
@@ -32,7 +32,7 @@ while(1):
     #frame = cv2.GaussianBlur(frame,(5,5),1)
     #noise_free = cv2.medianBlur(frame, 3)
 
-    #frame = imutils.resize(frame, width=min(500, frame.shape[1]))
+    frame = imutils.resize(frame, width=min(500, frame.shape[1]))
 
     fgmask = bs.get_mask(frame)
 
@@ -60,7 +60,7 @@ while(1):
             i += 1
         objects.append(obj)
         #scene.add_object(obj)
-    scene.update_objects(objects)
+    scene.update_objects(objects, frame)
 
     for i, o in scene.objects.items():
         o.draw(frame)
@@ -68,7 +68,7 @@ while(1):
 
     cv2.imshow('f',mask)
     cv2.imshow('fr', frame)
-    k = cv2.waitKey() & 0xff
+    k = cv2.waitKey(1) & 0xff
     if k == 27:
         break
 
