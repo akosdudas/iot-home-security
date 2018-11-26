@@ -1,4 +1,4 @@
-from object_tracker import ImageObject, ObjectType
+from .object_tracker import ImageObject, ObjectType
 
 import operator
 

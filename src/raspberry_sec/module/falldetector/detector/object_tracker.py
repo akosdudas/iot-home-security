@@ -6,9 +6,9 @@ from imutils.object_detection import non_max_suppression
 
 from enum import Enum
 
-from people_detector import HOGDetector, MobileNetSSD
+from .people_detector import HOGDetector, MobileNetSSD
 
-from state_predictor import State, StatePredictor
+from .state_predictor import State, StatePredictor
 
 #from utils import plotter
 

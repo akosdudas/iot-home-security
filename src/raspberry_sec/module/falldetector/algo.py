@@ -2,10 +2,10 @@ import numpy as np
 import cv2
 import imutils
 from imutils.object_detection import non_max_suppression
-from object_tracker import ImageObject
-from scene import Scene
-from fgbg import BS, CNT
-from utils import undistort_frame
+from detector.object_tracker import ImageObject
+from detector.scene import Scene
+from detector.fgbg import BS, CNT
+from detector.utils import undistort_frame
 
 # https://www.pyimagesearch.com/2015/11/09/pedestrian-detection-opencv/
 # https://www.theimpossiblecode.com/blog/backgroundsubtractorcnt-opencv-3-3-0/

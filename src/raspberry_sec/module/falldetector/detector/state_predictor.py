@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import operator
 
-from utils import StatePlotter
+from .utils import StatePlotter
 
 class State:
     STATE_VARS = ['x', 'y', 'h', 'w', 'angle']
