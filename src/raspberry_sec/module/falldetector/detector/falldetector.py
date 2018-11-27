@@ -40,7 +40,13 @@ class FallDetector():
             objects.append(obj)
         self.scene.update_objects(objects, self.frame)
 
+        # TODO detect fall, respond with True if a human fall was detected, False otherwise
+        return False
+
     def draw(self):
+        # If there were no processed frames, drawing is not possible
+        if self.frame is None:
+            return
         for i, o in self.scene.objects.items():
             o.draw(self.frame)
 

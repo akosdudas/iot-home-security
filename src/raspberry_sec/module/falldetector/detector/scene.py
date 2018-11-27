@@ -6,7 +6,7 @@ class Scene():
     i = 0
 
     DIST_ALLOWED_SQ = 500
-    UNSEEN_ALLOWED = 3
+    UNSEEN_ALLOWED = 15
 
     def __init__(self):
         self.objects = {}

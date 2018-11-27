@@ -1,0 +1,42 @@
+{
+    "__type__": "PCASystem",
+    "stream_controller": {
+        "__type__": "StreamController",
+        "action": {
+            "__type__": "EmailAction",
+            "parameters": {
+                "from_addr": "cicavirag@gmail.com",
+                "password": "",
+                "smtp_addr": "smtp.gmail.com:587",
+                "subject": "RaspberryPi ALERT",
+                "to_addr": "nagybalint000@gmail.com",
+                "user": "mt.raspberry.pi"
+            }
+        },
+        "msg_limit": "100",
+        "polling_interval": "3",
+        "query": "@STREAM1@ and True"
+    },
+    "streams": [
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "FalldetectorConsumer",
+                    "parameters": {
+                        "timeout": 1
+                    }
+                }
+            ],
+            "name": "STREAM1",
+            "producer": {
+                "__type__": "CameraProducer",
+                "parameters": {
+                    "device": 0,
+                    "unsuccessful_limit": 50,
+                    "wait_key_interval": 1
+                }
+            }
+        }
+    ]
+}
