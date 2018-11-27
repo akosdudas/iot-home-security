@@ -6,7 +6,7 @@ class Scene():
     i = 0
 
     DIST_ALLOWED_SQ = 500
-    UNSEEN_ALLOWED = 15
+    UNSEEN_ALLOWED = 5
 
     def __init__(self):
         self.objects = {}
@@ -99,6 +99,11 @@ class Scene():
         for i, obj in self.objects.items():
             if(obj.unseen > Scene.UNSEEN_ALLOWED):
                 expired_list.append(i)
+
+        #TODO predict states for unmatched non-expired historical object based on past states
+        # aka step Kalman-filter by 1
+        for unhandled_object in [self.objects[obj_id] for obj_id in self.objects.keys() if self.objects[obj_id].unseen > 0]:
+            unhandled_object.update_state(unhandled_object)
 
         for i in expired_list:    
             del self.objects[i]

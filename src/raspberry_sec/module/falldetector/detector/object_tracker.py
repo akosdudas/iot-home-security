@@ -39,7 +39,7 @@ class ImageObject:
     def update_state(self, matching_obj):
         self.contour = matching_obj.contour
         self.roi = matching_obj.roi
-        self.unseen = 0
+        self.unseen = matching_obj.unseen
         if not self.type == ObjectType.HUMAN:
             self.type = matching_obj.type
 
