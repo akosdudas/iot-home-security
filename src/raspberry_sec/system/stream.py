@@ -3,7 +3,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from itertools import groupby
-
+from raspberry_sec.system.zonemanager import ZoneManager
 from raspberry_sec.interface.action import ActionMessage
 from raspberry_sec.interface.consumer import ConsumerContext
 from raspberry_sec.system.util import ProcessContext, ProcessReady
@@ -23,6 +23,7 @@ class Stream(ProcessReady):
 		self.name = _name
 		self.producer = None
 		self.consumers = []
+		self.zone_manager = ZoneManager()
 
 	def get_name(self):
 		"""
@@ -88,7 +89,7 @@ class Stream(ProcessReady):
 					Stream.LOGGER.debug(self.name + ' calling consumer: ' + consumer.get_name())
 					c_context = consumer.run(c_context)
 
-				if c_context.alert:
+				if c_context.alert and self.zone_manager.is_zone_active(self.producer.get_zone()):
 					Stream.LOGGER.debug(self.name + ' enqueueing controller message')
 					sc_queue.put(StreamControllerMessage(
 						_alert=c_context.alert,
@@ -113,7 +114,6 @@ class StreamControllerMessage:
 		self.alert = _alert
 		self.msg = _msg
 		self.sender = _sender
-
 
 class StreamController(ProcessReady):
 	"""
@@ -183,7 +183,7 @@ class StreamController(ProcessReady):
 		"""
 		message_queue = context.get_prop('message_queue')
 
-		# iterate through messages in queue
+		# iterate through messages in queuone
 		with ThreadPoolExecutor(max_workers=4) as executor:
 			while True:
 				StreamController.LOGGER.info('Checking message queue')

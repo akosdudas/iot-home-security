@@ -15,7 +15,15 @@
         },
         "msg_limit": "100",
         "polling_interval": "3",
-        "query": "@STREAM1@ and @STREAM2@"
+        "query": "@STREAM1@ and @STREAM2@ and @STREAM3@ ",
+        "zones": {
+            "Garage": false,
+            "Kitchen": true,
+            "Small Room": false,
+            "dining room": false,
+            "front entrance": false,
+            "living room": false
+        }
     },
     "streams": [
         {
@@ -53,7 +61,8 @@
                 "parameters": {
                     "device": 0,
                     "unsuccessful_limit": 50,
-                    "wait_key_interval": 250
+                    "wait_key_interval": 250,
+                    "zone": "kitchen"
                 }
             }
         },
@@ -95,7 +104,31 @@
                 "parameters": {
                     "device": 0,
                     "unsuccessful_limit": 50,
-                    "wait_key_interval": 250
+                    "wait_key_interval": 250,
+                    "zone": "kitchen"
+                }
+            }
+        },
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "VoicerecognizerConsumer",
+                    "parameters": {
+                        "api_key": "xxx",
+                        "language": "en-US",
+                        "recognizer": "google",
+                        "threshold": 320
+                    }
+                }
+            ],
+            "name": "STREAM3",
+            "producer": {
+                "__type__": "MicrophoneProducer",
+                "parameters": {
+                    "chunk_size": 512,
+                    "device": 8,
+                    "sample_rate": 44100
                 }
             }
         }
