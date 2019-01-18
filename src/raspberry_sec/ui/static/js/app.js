@@ -41,10 +41,10 @@ $('#cfg_form').submit(function(e){
 });
 
 // Control
-function ctrlButtonSend(onStr) {
+function ctrlButtonSend(onStr, zone) {
     $.ajax({
         type : 'POST',
-        data: {'on': onStr},
+        data: {'on': onStr, 'zone': zone},
         beforeSend: function(xhr) {
             xhr.setRequestHeader('X-CSRFToken', getXSRFCookie());
         },
@@ -54,13 +54,104 @@ function ctrlButtonSend(onStr) {
         }
     });
 }
+
+function onDeleteZone(zone) {
+	$.ajax({
+	    url: '/zones/' + zone,
+	    type: 'POST',
+	    data: { 'zone': zone },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('X-CSRFToken', getXSRFCookie());
+        },
+	    success: function(result) {
+                location.reload();
+	    }
+	});
+}
+
+function initZones(zones) {
+	var zoneTable = document.getElementById("controltable");
+	jQuery.each(zones, function(i, value) {
+		var button = i.replace(/\s/g, '_');
+		zoneTable.insertAdjacentHTML('afterBegin','<tr><td>' + i.charAt(0).toUpperCase() + i.slice(1) + '</td><td><input type="checkbox" name="zone" value="' + i + '"></td><td><input type="button" id="'+ button +'" value="Delete"></td></tr>');
+		$('#' + button).click(
+			function() {
+				onDeleteZone(i);
+		});
+	});
+	zoneTable.insertAdjacentHTML('afterbegin','<tr><th>Zones:</th><th>Arm:</th><th></th></tr>');
+}
+
+function onAddZone(zone) {
+	$.ajax({
+	   url: 'zones',
+	   type: 'POST',
+           data: {'zone' : zone},
+       	   beforeSend: function(xhr) {
+             xhr.setRequestHeader('X-CSRFToken', getXSRFCookie());
+           },
+	   success: function(response) {
+                location.reload();
+	   }
+	});
+}
+
+$('#add_zone').click(
+	function() {
+		var zoneTable = document.getElementById("zones");
+		var zone = document.getElementById("text_zone").value;
+		var zone_id = zone.toLowerCase();
+		onAddZone(zone);
+});
+
+window.onload = function() {
+	
+	if (window.location.href.match('control') != null) {
+		
+		$.getJSON('zones', function(data) {
+   		 initZones(data)
+		});
+
+		var addButton = document.getElementById("add_zone");	
+		var zoneTable = document.getElementById("zones");
+
+		addButton.onclick = function() {
+		  var zone = document.getElementById("text_zone").value;
+		  var zone_id = zone.toLowerCase();
+		  zoneTable.innerHTML += '<input type="checkbox" name="zone" value="' + zone_id + '">' + zone;
+		}
+	}
+}
+
+function printChecked(){
+	var items = document.getElementsByName('zone');
+	var selectedItems ='{';
+	for(var i = 0; i < items.length; i++)
+		if(items[i].type == 'checkbox'){
+			selectedItems += '\"';
+			selectedItems += items[i].value + '\":';
+			if(items[i].checked == true)
+				selectedItems += 'true ,';
+			else
+				selectedItems += 'false ,';
+	}
+	selectedItems = selectedItems.slice(0,-1);
+	selectedItems += '}';
+	if(!selectedItems)
+		alert('No zone selected, please select one');
+	return selectedItems;
+}
+
 $('#ctrl_start').click(
     function(){
-        ctrlButtonSend('true');
+	var zone = printChecked();
+        ctrlButtonSend('true', zone);
 });
+
 $('#ctrl_stop').click(
     function(){
-        ctrlButtonSend('false');
+	zone = null
+        ctrlButtonSend('false', zone);
 });
 
 // Login
@@ -99,3 +190,4 @@ function getXSRFCookie() {
     var r = document.cookie.match('\\b_xsrf=([^;]*)\\b');
     return r ? r[1] : undefined;
 }
+

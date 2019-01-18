@@ -1,5 +1,6 @@
 import json
 import logging
+import importlib
 from json import JSONDecoder
 from json import JSONEncoder
 from multiprocessing import Queue
@@ -53,7 +54,7 @@ class PCASystem(ProcessReady):
 	def run(self, context: ProcessContext):
 		"""
 		This method starts the components in separate processes
-		and then waits for the stop event. It then terminates the processes if necessary.
+		and then waits f r the stop event. It then terminates the processes if necessary.
 		:param context: contains tools needed for 'running alone'
 		"""
 		# 1 - Validate the components
@@ -146,7 +147,7 @@ class PCASystem(ProcessReady):
 		sc_context = ProcessContext(
 			log_queue=context.logging_queue,
 			stop_event=context.stop_event,
-			message_queue=self.sc_queue
+			message_queue=self.sc_queue,
 		)
 		self.sc_process = ProcessContext.create_process(
 			target=self.stream_controller.start,
@@ -159,7 +160,7 @@ class PCASystem(ProcessReady):
 
 	def start_stream_processes(self, context: ProcessContext):
 		"""
-		Creates the stream processes and fires them up.
+		Creates the stream processes .zoand fires them up.
 		:param context: holds the 'stop event' and the loggign queue as well
 		"""
 		for stream in self.streams:
@@ -167,7 +168,7 @@ class PCASystem(ProcessReady):
 				stop_event=context.stop_event,
 				log_queue=context.logging_queue,
 				shared_data_proxy=self.prod_to_proxy[stream.producer],
-				sc_queue=self.sc_queue
+				sc_queue=self.sc_queue,
 			)
 			proc = ProcessContext.create_process(
 				target=stream.start,
@@ -318,7 +319,6 @@ class PCASystemJSONEncoder(JSONEncoder):
 		obj_dict['producer'] = dict()
 		obj_dict['producer'][PCASystemJSONEncoder.TYPE] = type(obj.producer).__name__
 		obj_dict['producer'][PCASystemJSONEncoder.PARAMETERS] = obj.producer.parameters
-
 		obj_dict['consumers'] = list()
 		for consumer in obj.consumers:
 			c = dict()

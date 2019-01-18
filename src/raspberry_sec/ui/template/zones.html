@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="PCA Home Security">
+    <meta name="author" content="MT">
+
+    <title>PCA Home Security</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href={{static_url("img/pca.png")}}>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href={{static_url("css/dashboard.css")}} rel="stylesheet">
+    <link href={{static_url("css/login.css")}} rel="stylesheet">
+  </head>
+<body>
+<h2>JSON Object Creation in JavaScript</h2>
+<p id="demo"></p>
+<script>
+/* var text = '{"name":"John Johnson","street":"Oslo West 16","phone":"555 1234567"}'; */
+
+var text = '{% raw data %}';
+var obj = JSON.parse(text);
+
+document.getElementById("demo").innerHTML =
+obj.name + "<br>" +
+obj.street + "<br>" +
+obj.phone;
+</script>
+<body>
+</body>
+</html>
