@@ -9,6 +9,7 @@ class Type(Enum):
 	Producer types
 	"""
 	CAMERA = 1
+	MOTION_DETECTOR = 2
 
 
 class ProducerDataManager(BaseManager):

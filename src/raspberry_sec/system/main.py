@@ -98,7 +98,7 @@ def run_pcasystem(env: str, log_queue: Queue):
 	"""
 	# PCA
 	current_dir = os.path.dirname(os.path.abspath(__file__))
-	config_file = os.path.abspath(os.path.join(current_dir, '../../config', env, 'falldetector.json'))
+	config_file = os.path.abspath(os.path.join(current_dir, '../../config', env, 'pirsensor.json'))
 	pca_runtime = PCARuntime(log_queue, PCARuntime.load_pca(config_file))
 	pca_runtime.start()
 

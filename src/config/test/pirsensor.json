@@ -1,0 +1,36 @@
+{
+    "__type__": "PCASystem",
+    "stream_controller": {
+        "__type__": "StreamController",
+        "action": {
+            "__type__": "PirsensorAction",
+            "parameters": {
+                "dummy": "dummy"
+            }
+        },
+        "msg_limit": "100",
+        "polling_interval": "3",
+        "query": "@STREAM1@ and True"
+    },
+    "streams": [
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "PirsensorConsumer",
+                    "parameters": {
+                        "timeout": 1
+                    }
+                }
+            ],
+            "name": "STREAM1",
+            "producer": {
+                "__type__": "PirsensorProducer",
+                "parameters": {
+                    "GPIO_PIN": 7,
+                    "wait_interval": 1
+                }
+            }
+        }
+    ]
+}
