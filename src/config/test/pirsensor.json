@@ -27,7 +27,7 @@
             "producer": {
                 "__type__": "PirsensorProducer",
                 "parameters": {
-                    "GPIO_PIN": 7,
+                    "GPIO_PIR": 7,
                     "wait_interval": 1
                 }
             }

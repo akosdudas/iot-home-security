@@ -23,7 +23,7 @@ class PirsensorProducer(Producer):
     
     def __setup_hw(self):
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.parameters['GPIO_PIN'],GPIO.IN)
+        GPIO.setup(self.parameters['GPIO_PIR'],GPIO.IN)
 
     def __teardown_hw(self):
         GPIO.cleanup()
@@ -39,7 +39,7 @@ class PirsensorProducer(Producer):
 
             while not context.stop_event.is_set():
                 data = self.__capture_data()
-                if data:
+                if data is not None:
                     data_proxy.set_data(data)
 
                 time.sleep(self.parameters['wait_interval'])
