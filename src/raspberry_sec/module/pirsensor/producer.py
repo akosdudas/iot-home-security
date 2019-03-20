@@ -68,7 +68,7 @@ class PirsensorProducer(Producer):
 
                 time.sleep(self.parameters['wait_interval'])
         except IOError as e:
-            PirsensorProducer.LOGGER.error(e.message)
+            PirsensorProducer.LOGGER.error(str(e))
         finally:
             # Tear down HW accessing the motion sensor
             self.__teardown_hw()
