@@ -19,7 +19,7 @@ class PirsensorConsumer(Consumer):
         return Type.MOTION_DETECTOR
 
     def run(self, context: ConsumerContext):
-        PirsensorConsumer.LOGGER.info('Consumer called')
+        PirsensorConsumer.LOGGER.debug('Consumer called')
 
         data = context.data
 
@@ -32,5 +32,6 @@ class PirsensorConsumer(Consumer):
 
         time.sleep(self.parameters['timeout'])
 
-        PirsensorConsumer.LOGGER.info('Done')
+        PirsensorConsumer.LOGGER.debug('Done')
         return ConsumerContext(_data=data, _alert=alert, _alert_data=alert_data)
+        

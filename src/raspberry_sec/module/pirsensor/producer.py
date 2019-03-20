@@ -18,10 +18,6 @@ class PirsensorProducer(Producer):
     def __init__(self, parameters: dict):
         super().__init__(parameters)
 
-        # Check if the software is running on a raspberry pi
-        if not check_platform():
-            raise OSError("Not running on a Raspberry Pi. The libraries handling the PIR sensor can only be used on a Raspberry Pi.")
-
     def register_shared_data_proxy(self):
         ProducerDataManager.register('PirsensorProducerDataProxy', PirsensorProducerDataProxy)
 
@@ -46,16 +42,23 @@ class PirsensorProducer(Producer):
         return GPIO.input(self.parameters['GPIO_PIR'])
 
     def run(self, context: ProcessContext):
+        # Check if the software is running on a raspberry pi
+        if not check_platform():
+            # Stop the system and return early
+            context.stop_event.set()
+            PirsensorProducer.LOGGER.error('SW not running on a Raspberry Pi. The libraries handling the PIR sensor can only be used on a Raspberry Pi.')
+            return 
+
         try:
             PirsensorProducer.LOGGER.debug('Producer started')
-            
-            # Set up the HW for handling the motion sensor
-            self.__setup_hw()
 
             # Get data proxy
             data_proxy = context.get_prop('shared_data_proxy')
             # Set initial data as None
             data_proxy.set_data(None)
+
+            # Set up the HW for handling the motion sensor
+            self.__setup_hw()
 
             # Read motion status
             while not context.stop_event.is_set():
@@ -64,6 +67,8 @@ class PirsensorProducer(Producer):
                     data_proxy.set_data(data)
 
                 time.sleep(self.parameters['wait_interval'])
+        except IOError as e:
+            PirsensorProducer.LOGGER.error(e.message)
         finally:
             # Tear down HW accessing the motion sensor
             self.__teardown_hw()
