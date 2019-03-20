@@ -3,9 +3,10 @@ from raspberry_sec.interface.producer import Producer, ProducerDataManager, Prod
 from raspberry_sec.system.util import ProcessContext
 from raspberry_sec.system.hw_util import is_gpio_floating, check_platform
 
-from importlib import import_module
-
 import time
+
+if check_platform():
+    import RPi.GPIO as GPIO
 
 class PirsensorProducerDataProxy(ProducerDataProxy):
     pass
@@ -20,7 +21,6 @@ class PirsensorProducer(Producer):
         # Check if the software is running on a raspberry pi
         if not check_platform():
             raise OSError("Not running on a Raspberry Pi. The libraries handling the PIR sensor can only be used on a Raspberry Pi.")
-        self.gpio = import_module('RPi.GPIO')
 
     def register_shared_data_proxy(self):
         ProducerDataManager.register('PirsensorProducerDataProxy', PirsensorProducerDataProxy)
@@ -29,7 +29,6 @@ class PirsensorProducer(Producer):
         return manager.PirsensorProducerDataProxy()
     
     def __test_hw(self):
-
         # Check if the PIR sensor is properly connected according to the configuration
         if is_gpio_floating(self.parameters["GPIO_PIR"]):
             raise IOError("The configured pin of the PIR motion sensor is floating")
@@ -37,27 +36,26 @@ class PirsensorProducer(Producer):
     def __setup_hw(self):
         self.__test_hw()
         # Set pulldown for GPIO pin
-        self.gpio.setmode(GPIO.BCM)
-        self.gpio.setup(self.parameters['GPIO_PIR'], self.gpio.IN, pull_up_down=self.gpio.PUD_DOWN)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.parameters['GPIO_PIR'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     def __teardown_hw(self):
-        self.gpio.cleanup()
+        GPIO.cleanup()
 
     def __capture_data(self):
-        return self.gpio.input(self.parameters['GPIO_PIR'])
+        return GPIO.input(self.parameters['GPIO_PIR'])
 
     def run(self, context: ProcessContext):
         try:
             PirsensorProducer.LOGGER.debug('Producer started')
-            
-            # Set initial data as None
-            data_proxy.set_data(None)
             
             # Set up the HW for handling the motion sensor
             self.__setup_hw()
 
             # Get data proxy
             data_proxy = context.get_prop('shared_data_proxy')
+            # Set initial data as None
+            data_proxy.set_data(None)
 
             # Read motion status
             while not context.stop_event.is_set():
