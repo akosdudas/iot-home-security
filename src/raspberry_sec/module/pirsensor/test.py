@@ -1,5 +1,5 @@
 import os, sys, time
-from multiprocessing import Event, process
+from multiprocessing import Event, Process
 from threading import Thread
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
@@ -35,7 +35,7 @@ def show_motion_status(context: ProcessContext):
         while not context.stop_event.is_set():
             consumer_context.data = data_proxy.get_data()
             results = consumer.run(consumer_context)
-            print(f'Consumer run - ALERT: {results.alert} - DATA: {results.data}')
+            print('Consumer run - ALERT: {alert} - DATA: {data}'.format(alert=results.alert, data=results.data))
     finally:
         pass
 
