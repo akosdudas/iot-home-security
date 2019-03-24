@@ -3,7 +3,7 @@ opencv-contrib-python == 3.3.0.10
 pytest == 3.2.2
 tornado == 4.5.2
 scrypt == 0.8.6
-tensorflow == 1.1.0
+tensorflow == 1.11.0
 keras == 2.1.2
 h5py == 2.7.1
 sklearn
