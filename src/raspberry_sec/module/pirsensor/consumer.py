@@ -24,7 +24,7 @@ class PirsensorConsumer(Consumer):
         data = context.data
         context.alert = False
 
-        if data is not None 
+        if data is not None: 
             if data == MOTION_DETECTED:
                 context.alert = True
                 context.alert_data = "Motion detected"
