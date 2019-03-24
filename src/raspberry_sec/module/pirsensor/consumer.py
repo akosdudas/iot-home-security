@@ -22,16 +22,15 @@ class PirsensorConsumer(Consumer):
         PirsensorConsumer.LOGGER.debug('Consumer called')
 
         data = context.data
+        context.alert = False
 
-        if data is not None and data == MOTION_DETECTED:
-            alert = True
-            alert_data = "Motion detected"
+        if data is not None 
+            if data == MOTION_DETECTED:
+                context.alert = True
+                context.alert_data = "Motion detected"
         else:
-            alert = False
-            alert_data = ""
-
-        time.sleep(self.parameters['timeout'])
+            time.sleep(self.parameters['timeout'])
 
         PirsensorConsumer.LOGGER.debug('Done')
-        return ConsumerContext(_data=data, _alert=alert, _alert_data=alert_data)
+        return context
         
