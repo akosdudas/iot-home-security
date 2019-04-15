@@ -1,19 +1,8 @@
-import os
-import json
 import pyrebase
+from utils import get_firebase_config
 
-def setup_firebase_app(config_file_path):
-    with open(config_file_path) as config_file:
-        config = json.load(config_file)
-    
+def setup_firebase_app():
+    config = get_firebase_config()
     return pyrebase.initialize_app(config)
 
-__config_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    '..',
-    '..',
-    'config', 'gcp', 'firebase.json'
-)
-
-firebase = setup_firebase_app(__config_path)
-pass
+firebase = setup_firebase_app()
