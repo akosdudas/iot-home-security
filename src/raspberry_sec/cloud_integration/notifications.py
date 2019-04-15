@@ -1,5 +1,4 @@
 import requests
-from requests_jwt import JWTAuth
 from auth import Auth
 from utils import get_functions_base_url
 
