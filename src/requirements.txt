@@ -12,3 +12,4 @@ pyjwt
 paho-mqtt
 requests
 pyrebase
+cryptography
