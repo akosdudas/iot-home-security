@@ -1,0 +1,39 @@
+{
+    "__type__": "PCASystem",
+    "stream_controller": {
+        "__type__": "StreamController",
+        "action": {
+            "__type__": "DummyAction",
+            "parameters": {
+                "dummy": "dummy"
+            }
+        },
+        "msg_limit": "100",
+        "polling_interval": "3",
+        "query": "@STREAM1@ and True"
+    },
+    "streams": [
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "CameraConsumer",
+                    "parameters": {
+                        "timeout": 1,
+                        "wait_key_timeout": 1000,
+                        "producer_type": "Camera"
+                    }
+                }
+            ],
+            "name": "STREAM1",
+            "producer": {
+                "__type__": "CameraProducer",
+                "parameters": {
+                    "device": 0,
+                    "unsuccessful_limit": 50,
+                    "wait_key_interval": 1
+                }
+            }
+        }
+    ]
+}

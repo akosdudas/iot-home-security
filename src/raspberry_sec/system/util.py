@@ -115,13 +115,13 @@ class ProcessReady:
 		root.addHandler(handler)
 		root.setLevel(logging.DEBUG)
 
-	def start(self, context: ProcessContext):
+	def start(self, context: ProcessContext, *args):
 		"""
 		Common entry point for a new process
 		:param context: containing the arguments when creating a new process
 		"""
 		ProcessReady.setup_logging(context.logging_queue)
-		self.run(context)
+		self.run(context, *args)
 
 	def run(self, context: ProcessContext):
 		"""
