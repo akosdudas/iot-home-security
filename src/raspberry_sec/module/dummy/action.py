@@ -20,6 +20,6 @@ class DummyAction(Action):
 	def get_name(self):
 		return 'DummyAction'
 
-	def fire(self, msg: list):
+	def fire(self, msg: list, **kwargs):
 		DummyAction.LOGGER.info('Action fired')
 		DummyAction.LOGGER.info('Action finished')

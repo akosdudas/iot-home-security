@@ -8,8 +8,8 @@ from raspberry_sec.system.main import LogRuntime
 from raspberry_sec.system.util import ProcessContext
 from raspberry_sec.module.pushnotification.action import PushnotificationAction
 from raspberry_sec.interface.action import ActionMessage
-from raspberry_sec.mqtt.mqtt_device import MQTTDevice
-from raspberry_sec.mqtt.test_mqtt import configure_mqtt_session, get_config_dir
+from raspberry_sec.mqtt.mqtt_session import MQTTSession
+from raspberry_sec.mqtt.test_mqtt import get_config_dir
 
 
 def set_parameters():
@@ -24,15 +24,24 @@ def integration_test():
     log_runtime = LogRuntime(level=logging.DEBUG)
     log_runtime.start()
 
-    # Configure mqtt device
-    configure_mqtt_session(get_config_dir())
+    config_folder = get_config_dir()
+    mqtt_session = MQTTSession(
+        config_path=os.path.join(config_folder, 'gcp', 'mqtt.json'),
+        private_key_file=os.path.join(config_folder, 'gcp', 'keys', 'rsa_private.pem'), 
+        ca_certs=os.path.join(config_folder, 'gcp', 'keys', 'roots.pem')
+    )
 
     stop_event = mp.Event()
     stop_event.clear()
 
-    # Start mqtt process
-    context = ProcessContext(log_runtime.log_queue, stop_event)
-    MQTTDevice().up(context)
+    mqtt_context = ProcessContext(log_runtime.log_queue, stop_event)
+    proc = ProcessContext.create_process(
+        target=mqtt_session.start,
+        name=mqtt_session.get_name(),
+        args=(mqtt_context, )
+    )
+
+    proc.start()
 
     time.sleep(10)
     
@@ -40,13 +49,14 @@ def integration_test():
     push_notification_action = PushnotificationAction(set_parameters())
 
     # When
-    push_notification_action.fire([
-        ActionMessage('Test push notification')
-    ])
+    push_notification_action.fire(
+        [ActionMessage('Test push notification')], 
+        alert_queue=mqtt_session.alert_queue
+    )
 
     time.sleep(10)
 
-    MQTTDevice().down()
+    stop_event.set()
     log_runtime.stop()
 
 if __name__ == '__main__':

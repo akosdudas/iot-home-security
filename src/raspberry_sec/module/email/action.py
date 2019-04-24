@@ -21,7 +21,7 @@ class EmailAction(Action):
 	def get_name(self):
 		return 'EmailAction'
 
-	def fire(self, msg: list):
+	def fire(self, msg: list, **kwargs):
 		"""
 		This method sends an email with the content set to the msg.
 		:param msg: ActionMessage-s

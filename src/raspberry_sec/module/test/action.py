@@ -19,7 +19,7 @@ class TestAction(Action):
 	def get_name(self):
 		return 'TestAction'
 
-	def fire(self, msg: list):
+	def fire(self, msg: list, **kwargs):
 		TestAction.LOGGER.info('Action fired: ' + '; '.join([m.data for m in msg]))
 		time.sleep(5)
 		TestAction.LOGGER.info('Action finished')

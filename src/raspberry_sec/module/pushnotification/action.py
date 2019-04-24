@@ -1,7 +1,7 @@
 import logging
 import time
 from raspberry_sec.interface.action import Action
-from raspberry_sec.mqtt.mqtt_device import MQTTDevice, MQTTAlertMessage
+from raspberry_sec.mqtt.mqtt_utils import MQTTAlertMessage
 
 
 class PushnotificationAction(Action):
@@ -20,16 +20,18 @@ class PushnotificationAction(Action):
 	def get_name(self):
 		return 'PushnotificationAction'
 
-	def fire(self, msg: list):
+	def fire(self, msg: list, **kwargs):
 		PushnotificationAction.LOGGER.info('Action fired: ' + '; '.join([m.data for m in msg]))
 		
-		if not MQTTDevice().is_connected():
+		alert_queue = kwargs['alert_queue']
+
+		if not alert_queue:
 			PushnotificationAction.LOGGER.error('MQTT Session not connected - Cannot send Push Notification')
 		else:
 			message = MQTTAlertMessage(
 				title="Alert",
 				body=" ;".join([m.data for m in msg])
 			)
-			MQTTDevice().publish_alert(message)
+			alert_queue.put(str(message), block=False)
 		
 		PushnotificationAction.LOGGER.info('Action finished')

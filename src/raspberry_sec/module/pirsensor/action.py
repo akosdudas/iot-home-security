@@ -13,6 +13,6 @@ class PirsensorAction(Action):
     def get_name(self):
         return PirsensorAction.NAME
 
-    def fire(self, msg: list):
+    def fire(self, msg: list, **kwargs):
         PirsensorAction.LOGGER.info('ALERT')
         PirsensorAction.LOGGER.info('; '.join([str(m.data) for m in msg]))

@@ -6,28 +6,33 @@ import ssl
 import time
 import logging
 import random
+import os
+import jwt
 from multiprocessing import Event, Queue
 from queue import Empty as QueueEmpty
 
 import paho.mqtt.client as mqtt
 
-from raspberry_sec.mqtt.mqtt_utils import create_jwt, error_str
 from raspberry_sec.system.util import ProcessReady, ProcessContext
 
 class MQTTSession(ProcessReady):
+    
+    NAME = "MQTTSession"
     LOGGER = logging.getLogger('MQTTSession')
     MAXIMUM_BACKOFF_TIME = 32
-    
-    def __init__(self, config_path, private_key_file, ca_certs, on_message_callback):
+
+    def __init__(self, config_path, private_key_file, ca_certs):
         self.config = MQTTSession.load_config(config_path)
         self.config.private_key_file = private_key_file
         self.config.ca_certs = ca_certs
         self.minimum_backoff_time = 1
         self.should_backoff = False
-        self.on_message = on_message_callback
         self.jwt_iat = None
         self.client = None
         self.connected = False
+        self.alert_queue = Queue()
+        self.state_queue = Queue()
+        self.command_queue = Queue()
 
     @staticmethod
     def load_config(config_path):
@@ -35,6 +40,9 @@ class MQTTSession(ProcessReady):
         with open(config_path) as config_file:
             config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
         return config
+
+    def get_name(self):
+        return MQTTSession.NAME
 
     def on_connect(on_connect, unused_client, unused_userdata, unused_flags, rc):
         MQTTSession.LOGGER.debug('on_connect {}'.format(error_str(rc)))
@@ -55,6 +63,23 @@ class MQTTSession(ProcessReady):
     def on_publish(self, unused_client, unused_userdata, unused_mid):
         """Paho callback when a message is sent to the broker."""
         MQTTSession.LOGGER.debug('on_publish')
+
+
+    def on_message(self, unused_client, unused_userdata, message):
+        """Callback when the device receives a message on a subscription."""
+        payload = str(message.payload)
+        MQTTSession.LOGGER.debug('Received message \'{}\' on topic \'{}\' with Qos {}'.format(
+                payload, message.topic, str(message.qos)))
+        
+        MQTTSession.LOGGER.debug(payload)
+        topic_name = message.topic.split('/')[-1]
+        MQTTSession.LOGGER.debug(topic_name)
+        command = message.payload.decode('ascii')
+        MQTTSession.LOGGER.debug(command)
+
+        if topic_name == 'commands':
+            MQTTSession.LOGGER.debug('State update command received')
+            self.command_queue.put(command, block=False)
 
     def publish_message(self, topic_name, payload, qos=0):
         device_topic = '/devices/{}/{}'.format(self.config.device_id, topic_name)
@@ -106,7 +131,7 @@ class MQTTSession(ProcessReady):
         mqtt_command_topic = '/devices/{}/commands/#'.format(self.config.device_id)
 
         # Subscribe to the commands topic, QoS 1 enables message acknowledgement.
-        print('Subscribing to {}'.format(mqtt_command_topic))
+        MQTTSession.LOGGER.info('Subscribing to {}'.format(mqtt_command_topic))
         self.client.subscribe(mqtt_command_topic, qos=0)
 
     def run_client_loop(self):
@@ -140,18 +165,18 @@ class MQTTSession(ProcessReady):
 
         return True
 
-    def publish_alert(self, alert_queue: Queue):
+    def publish_alert(self):
         try:
-            alert_message = alert_queue.get(block=False)
+            alert_message = self.alert_queue.get(block=False)
             MQTTSession.LOGGER.info("Publishing alert - {}".format(str(alert_message)[:80]))
             self.publish_message('events', str(alert_message))
         except QueueEmpty as e:
             MQTTSession.LOGGER.info("Alert Queue empty - passing")
             pass
 
-    def publish_state(self, state_queue: Queue):
+    def publish_state(self):
         try:
-            state_message = state_queue.get(block=False)
+            state_message = self.state_queue.get(block=False)
             MQTTSession.LOGGER.info("Publishing state - {}".format(str(state_message)[:80]))
             self.publish_message('state', str(state_message))
         except QueueEmpty as e:
@@ -159,7 +184,7 @@ class MQTTSession(ProcessReady):
             pass
 
 
-    def run(self, context: ProcessContext, alert_queue: Queue, state_queue: Queue):
+    def run(self, context: ProcessContext):
         MQTTSession.LOGGER.debug('Starting')
         stop_event = context.stop_event
 
@@ -169,9 +194,45 @@ class MQTTSession(ProcessReady):
             MQTTSession.LOGGER.info('Start loop')
             if not self.run_client_loop(): 
                 break
-            self.publish_alert(alert_queue)
-            self.publish_state(state_queue)
+            self.publish_alert()
+            self.publish_state()
             time.sleep(5)
 
         self.client.disconnect()
         self.client = None
+
+def create_jwt(project_id, private_key_file, algorithm):
+    """Creates a JWT (https://jwt.io) to establish an MQTT connection.
+        Args:
+         project_id: The cloud project ID this device belongs to
+         private_key_file: A path to a file containing either an RSA256 or
+                 ES256 private key.
+         algorithm: The encryption algorithm to use. Either 'RS256' or 'ES256'
+        Returns:
+            An MQTT generated from the given project_id and private key, which
+            expires in 20 minutes. After 20 minutes, your client will be
+            disconnected, and a new JWT will have to be generated.
+        Raises:
+            ValueError: If the private_key_file does not contain a known key.
+        """
+
+    token = {
+            # The time that the token was issued at
+            'iat': datetime.datetime.utcnow(),
+            # The time the token expires.
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            # The audience field should always be set to the GCP project id.
+            'aud': project_id
+    }
+
+    # Read the private key file.
+    with open(private_key_file, 'r') as f:
+        private_key = f.read()
+
+    print('Creating JWT using {} from private key file {}'.format(algorithm, private_key_file))
+
+    return jwt.encode(token, private_key, algorithm=algorithm)
+
+def error_str(rc):
+    """Convert a Paho error to a human readable string."""
+    return '{}: {}'.format(rc, mqtt.error_string(rc))

@@ -1,14 +1,18 @@
+import os
 import json
 import logging
 from json import JSONDecoder
 from json import JSONEncoder
 from multiprocessing import Queue
+from queue import Full as QueueFull
+from queue import Empty as QueueEmpty
 from raspberry_sec.system.util import Loader, DynamicLoader, ProcessContext, ProcessReady
 from raspberry_sec.interface.action import Action
 from raspberry_sec.interface.consumer import Consumer
 from raspberry_sec.interface.producer import Producer, ProducerDataManager
 from raspberry_sec.system.stream import StreamController, Stream
-
+from raspberry_sec.mqtt.mqtt_session import MQTTSession
+from raspberry_sec.mqtt.mqtt_utils import get_mqtt_session, encode_img_for_transport
 
 class PCASystem(ProcessReady):
 	"""
@@ -33,6 +37,11 @@ class PCASystem(ProcessReady):
 		self.sc_queue = None
 		self.sc_process = None
 
+		self.mqtt_session = None
+		self.mqtt_command_queue = None
+		self.mqtt_alert_queue = None
+		self.mqtt_command_queue = None
+
 	def validate(self):
 		"""
 		Validates the system by checking its components.
@@ -47,6 +56,9 @@ class PCASystem(ProcessReady):
 		if not self.streams:
 			PCASystem.LOGGER.warning('There are no streams configured')
 			return False
+
+		if not self.mqtt_session:
+			PCASystem.LOGGER.info('There is no MQTT connection configured')
 
 		return True
 
@@ -73,7 +85,10 @@ class PCASystem(ProcessReady):
 		# 5 - start stream processes
 		self.start_stream_processes(context)
 
-		# 6 - wait for the stop event and periodically check the producers
+		# 6 - start mqtt session
+		self.start_mqtt_session(context)
+
+		# 7 - wait for the stop event and periodically check the producers
 		self.wait_for_completion(context)
 
 		PCASystem.LOGGER.info('Finished')
@@ -143,10 +158,16 @@ class PCASystem(ProcessReady):
 		Creates and fires up the stream controller process
 		:param context: holds the 'stop event' and the logging queue
 		"""
+		try:
+			alert_queue = self.mqtt_session.alert_queue
+		except:
+			alert_queue = None
+
 		sc_context = ProcessContext(
 			log_queue=context.logging_queue,
 			stop_event=context.stop_event,
-			message_queue=self.sc_queue
+			message_queue=self.sc_queue,
+			alert_queue=alert_queue
 		)
 		self.sc_process = ProcessContext.create_process(
 			target=self.stream_controller.start,
@@ -179,6 +200,20 @@ class PCASystem(ProcessReady):
 			PCASystem.LOGGER.info('Starting stream: ' + stream.name)
 			proc.start()
 
+	def start_mqtt_session(self, context: ProcessContext):
+		mqtt_context = ProcessContext(
+			stop_event=context.stop_event,
+			log_queue=context.logging_queue
+		)
+		proc = ProcessContext.create_process(
+			target=self.mqtt_session.start,
+			name=self.mqtt_session.get_name(),
+			args=(mqtt_context, )
+		)
+
+		PCASystem.LOGGER.info('Starting MQTT Session')
+		proc.start()
+
 	def wait_for_completion(self, context: ProcessContext):
 		"""
 		Waits for the stop event to be set and then initiates the shutdown
@@ -188,6 +223,8 @@ class PCASystem(ProcessReady):
 		while not context.stop_event.is_set():
 			context.stop_event.wait(timeout=PCASystem.POLLING_INTERVAL)
 			self.resurrect_producers(context)
+			if not self.mqtt_session is None:
+				self.process_commands()
 
 		PCASystem.LOGGER.info('Stop event arrived')
 
@@ -202,6 +239,47 @@ class PCASystem(ProcessReady):
 		PCASystem.LOGGER.info('Waiting for producers')
 		for prod, proc in self.prod_to_proc.items():
 			proc.join()
+	
+	def publish_state(self):
+		data = { }
+
+		for p in self.producer_set:
+			if p.get_name() == 'CameraProducer':
+				proxy = self.prod_to_proxy[p]
+				camera_image = proxy.get_data()
+				if camera_image is None:
+					PCASystem.LOGGER.warning('Camera Image is None')
+				else:
+					data['camera_image'] = encode_img_for_transport(camera_image)
+
+			elif p.get_name() == 'PirsensorProducer':
+				proxy = self.prod_to_proxy[p]
+				motion_sensor_status = proxy.get_data()
+				if motion_sensor_status is None:
+					PCASystem.LOGGER.warning('Motion sensor status None')
+				else:
+					data['motion_sensor_status'] = motion_sensor_status
+			else:
+				PCASystem.LOGGER.error('{} not supported'.format(p.get_name()))
+				pass
+
+		try:
+			PCASystem.LOGGER.info('Publishing state outside')
+			self.mqtt_state_queue.put(json.dumps(data), block=False)
+		except QueueFull as e:
+			PCASystem.LOGGER.error('State queue full')
+			pass
+	
+	def process_commands(self):
+		PCASystem.LOGGER.debug('Processing MQTT Commands')
+		try:
+			command = self.mqtt_command_queue.get(block=False)
+			if command == 'status_update_request':
+				PCASystem.LOGGER.info('State update request received')
+				self.publish_state()
+		except QueueEmpty as e:
+			PCASystem.LOGGER.debug('MQTT Command queue Empty')
+			pass
 
 
 class PCALoader(Loader):
@@ -462,6 +540,15 @@ class PCASystemJSONDecoder(JSONDecoder):
 			pca_system = PCASystem()
 			pca_system.stream_controller = obj_dict['stream_controller']
 			pca_system.streams = obj_dict['streams']
+			try:
+				if obj_dict['connect_mqtt'] == True:
+					mqtt_session = get_mqtt_session()
+					pca_system.mqtt_alert_queue = mqtt_session.alert_queue
+					pca_system.mqtt_command_queue = mqtt_session.command_queue
+					pca_system.mqtt_state_queue = mqtt_session.state_queue
+					pca_system.mqtt_session = mqtt_session
+			except:
+				pass
 			return pca_system
 		except KeyError:
 			PCASystemJSONDecoder.LOGGER.error('Cannot load PCASystem from JSON')

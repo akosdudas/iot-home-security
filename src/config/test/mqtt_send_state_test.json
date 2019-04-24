@@ -1,5 +1,6 @@
 {
     "__type__": "PCASystem",
+    "connect_mqtt": true,
     "stream_controller": {
         "__type__": "StreamController",
         "action": {
@@ -17,11 +18,11 @@
             "__type__": "Stream",
             "consumers": [
                 {
-                    "__type__": "CameraConsumer",
+                    "__type__": "DummyConsumer",
                     "parameters": {
                         "timeout": 1,
-                        "wait_key_timeout": 1000,
-                        "producer_type": "Camera"
+                        "producer_type": "Camera",
+                        "send_alert": false
                     }
                 }
             ],

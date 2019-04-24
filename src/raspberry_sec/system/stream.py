@@ -182,6 +182,7 @@ class StreamController(ProcessReady):
 		:param context: Process context
 		"""
 		message_queue = context.get_prop('message_queue')
+		alert_queue = context.get_prop('alert_queue')
 
 		# iterate through messages in queue
 		with ThreadPoolExecutor(max_workers=4) as executor:
@@ -200,6 +201,6 @@ class StreamController(ProcessReady):
 
 				# alert
 				if alert:
-					executor.submit(self.action.fire, action_messages)
+					executor.submit(self.action.fire, action_messages, alert_queue=alert_queue)
 
 				time.sleep(self.polling_interval)

@@ -24,6 +24,9 @@ class DummyConsumer(Consumer):
 
 	def run(self, context: ConsumerContext):
 		DummyConsumer.LOGGER.info('Working...')
+		if self.parameters['send_alert']:
+			context.alert = True
+			context.alert_data = 'Dummy alert'
 		time.sleep(self.parameters['timeout'])
 		DummyConsumer.LOGGER.info('Done...')
 		return context
