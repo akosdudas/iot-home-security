@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import time
+import json
 import multiprocessing as mp
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from raspberry_sec.system.main import LogRuntime
@@ -9,7 +10,7 @@ from raspberry_sec.system.util import ProcessContext
 from raspberry_sec.module.pushnotification.action import PushnotificationAction
 from raspberry_sec.interface.action import ActionMessage
 from raspberry_sec.mqtt.mqtt_session import MQTTSession
-from raspberry_sec.mqtt.test_mqtt import get_config_dir
+from raspberry_sec.system.util import get_config_dir, get_mqtt_keys_dir
 
 
 def set_parameters():
@@ -25,10 +26,14 @@ def integration_test():
     log_runtime.start()
 
     config_folder = get_config_dir()
+    config_file = os.path.join(config_folder, 'test', 'mqtt_standalone_test.json')
+    with open(config_file) as f:
+        config = json.load(f)
+
     mqtt_session = MQTTSession(
-        config_path=os.path.join(config_folder, 'gcp', 'mqtt.json'),
-        private_key_file=os.path.join(config_folder, 'gcp', 'keys', 'rsa_private.pem'), 
-        ca_certs=os.path.join(config_folder, 'gcp', 'keys', 'roots.pem')
+        config=config,
+        private_key_file=os.path.join(get_mqtt_keys_dir(), 'rsa_private.pem'), 
+        ca_certs=os.path.join(get_mqtt_keys_dir(), 'roots.pem')
     )
 
     stop_event = mp.Event()

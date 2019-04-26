@@ -1,6 +1,7 @@
 import importlib
 import pkgutil
 import logging
+import os
 from multiprocessing import Queue, Event, Process
 
 
@@ -199,3 +200,12 @@ class LogQueueListener:
 					logger.handle(record)
 			except:
 				raise
+
+def get_config_dir():
+	current_dir = os.path.dirname(os.path.abspath(__file__))
+	config_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'config'))
+	return config_dir
+
+def get_mqtt_keys_dir():
+	keys_dir = os.path.abspath(os.path.join(get_config_dir(), 'gcp', 'keys'))
+	return keys_dir

@@ -1,16 +1,11 @@
-import sys, os, logging, time
+import sys, os, logging, time, json
 import multiprocessing as mp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from raspberry_sec.system.main import PCARuntime, LogRuntime
-from raspberry_sec.system.util import ProcessReady, ProcessContext
+from raspberry_sec.system.util import ProcessReady, ProcessContext, get_config_dir, get_mqtt_keys_dir
 from raspberry_sec.mqtt.mqtt_session import MQTTSession
-
-def get_config_dir():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    config_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'config'))
-    return config_dir
 
 def test_integration():
     mp.set_start_method('spawn')
@@ -21,7 +16,7 @@ def test_integration():
 
     # Load PCA System
     config_dir = get_config_dir()
-    config_file = os.path.abspath(os.path.join(config_dir, 'test', 'mqtt_send_state_test.json'))
+    config_file = os.path.abspath(os.path.join(config_dir, 'test', 'mqtt_integration_test.json'))
     pca_runtime = PCARuntime(log_runtime.log_queue, PCARuntime.load_pca(config_file))
 
     pca_runtime.start()
@@ -41,10 +36,14 @@ def test_mqtt_session(waiting_time=10):
     log_runtime.start()
 
     config_folder = get_config_dir()
+    config_file = os.path.join(config_folder, 'test', 'mqtt_standalone_test.json')
+    with open(config_file) as f:
+        config = json.load(f)
+
     mqtt_session = MQTTSession(
-        config_path=os.path.join(config_folder, 'gcp', 'mqtt.json'),
-        private_key_file=os.path.join(config_folder, 'gcp', 'keys', 'rsa_private.pem'), 
-        ca_certs=os.path.join(config_folder, 'gcp', 'keys', 'roots.pem')
+        config=config,
+        private_key_file=os.path.join(get_mqtt_keys_dir(), 'rsa_private.pem'), 
+        ca_certs=os.path.join(get_mqtt_keys_dir(), 'roots.pem')
     )
 
     stop_event = mp.Event()
@@ -68,4 +67,4 @@ def test_mqtt_session(waiting_time=10):
     log_runtime.stop()
 
 if __name__ == "__main__":
-    test_integration()
+    test_mqtt_session()

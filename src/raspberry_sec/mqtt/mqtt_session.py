@@ -21,8 +21,8 @@ class MQTTSession(ProcessReady):
     LOGGER = logging.getLogger('MQTTSession')
     MAXIMUM_BACKOFF_TIME = 32
 
-    def __init__(self, config_path, private_key_file, ca_certs):
-        self.config = MQTTSession.load_config(config_path)
+    def __init__(self, config, private_key_file, ca_certs):
+        self.config = MQTTSession.parse_config(config)
         self.config.private_key_file = private_key_file
         self.config.ca_certs = ca_certs
         self.minimum_backoff_time = 1
@@ -35,10 +35,8 @@ class MQTTSession(ProcessReady):
         self.command_queue = Queue()
 
     @staticmethod
-    def load_config(config_path):
-        config = None
-        with open(config_path) as config_file:
-            config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+    def parse_config(config_dict):
+        config = SimpleNamespace(**config_dict)
         return config
 
     def get_name(self):

@@ -6,13 +6,13 @@ from json import JSONEncoder
 from multiprocessing import Queue
 from queue import Full as QueueFull
 from queue import Empty as QueueEmpty
-from raspberry_sec.system.util import Loader, DynamicLoader, ProcessContext, ProcessReady
+from raspberry_sec.system.util import Loader, DynamicLoader, ProcessContext, ProcessReady, get_mqtt_keys_dir
 from raspberry_sec.interface.action import Action
 from raspberry_sec.interface.consumer import Consumer
 from raspberry_sec.interface.producer import Producer, ProducerDataManager
 from raspberry_sec.system.stream import StreamController, Stream
 from raspberry_sec.mqtt.mqtt_session import MQTTSession
-from raspberry_sec.mqtt.mqtt_utils import get_mqtt_session, encode_img_for_transport
+from raspberry_sec.mqtt.mqtt_utils import encode_img_for_transport
 
 class PCASystem(ProcessReady):
 	"""
@@ -416,6 +416,11 @@ class PCASystemJSONEncoder(JSONEncoder):
 		:return: dict version of the input
 		"""
 		obj_dict = dict()
+		if  obj.mqtt_session is None:
+			obj_dict['connect_mqtt'] = False
+		else:
+			obj_dict['connect_mqtt'] = True
+			obj_dict['mqtt_session'] = obj.mqtt_session
 		obj_dict['streams'] = list(obj.streams)
 		obj_dict['stream_controller'] = obj.stream_controller
 		obj_dict[PCASystemJSONEncoder.TYPE] = PCASystem.__name__
@@ -439,6 +444,16 @@ class PCASystemJSONEncoder(JSONEncoder):
 		obj_dict[PCASystemJSONEncoder.TYPE] = StreamController.__name__
 		return obj_dict
 
+	@staticmethod
+	def mqtt_session_to_dict(obj: MQTTSession):
+		obj_dict = dict()
+		obj_dict['session_config'] = obj.config.__dict__
+		obj_dict.pop('private_key_file', None)
+		obj_dict.pop('ca_certs', None)
+
+		obj_dict[PCASystemJSONEncoder.TYPE] = MQTTSession.__name__
+		return obj_dict
+
 	def default(self, obj):
 		"""
 		:param obj: to be serialized
@@ -450,6 +465,8 @@ class PCASystemJSONEncoder(JSONEncoder):
 			return PCASystemJSONEncoder.pcasystem_to_dict(obj)
 		elif isinstance(obj, StreamController):
 			return PCASystemJSONEncoder.streamcontroller_to_dict(obj)
+		elif isinstance(obj, MQTTSession):
+			return PCASystemJSONEncoder.mqtt_session_to_dict(obj)
 		else:
 			return json.JSONEncoder.default(self, obj)
 
@@ -531,6 +548,19 @@ class PCASystemJSONDecoder(JSONDecoder):
 			PCASystemJSONDecoder.LOGGER.error('Cannot load StreamController from JSON')
 			raise
 
+	def mqtt_session_from_dict(self, obj_dict: dict):
+		try:
+			keys_dir = get_mqtt_keys_dir()
+			session_config = obj_dict["session_config"]
+			return MQTTSession(
+				config=session_config,
+				private_key_file=os.path.join(keys_dir, 'rsa_private.pem'),
+				ca_certs=os.path.join(keys_dir, 'roots.pem')
+			)
+		except KeyError:
+			PCASystemJSONDecoder.LOGGER.error('Cannot load StreamController from JSON')
+			raise
+
 	def pcasystem_from_dict(self, obj_dict: dict):
 		"""
 		:param obj_dict: JSON structure
@@ -542,7 +572,7 @@ class PCASystemJSONDecoder(JSONDecoder):
 			pca_system.streams = obj_dict['streams']
 			try:
 				if obj_dict['connect_mqtt'] == True:
-					mqtt_session = get_mqtt_session()
+					mqtt_session = obj_dict['mqtt_session']
 					pca_system.mqtt_alert_queue = mqtt_session.alert_queue
 					pca_system.mqtt_command_queue = mqtt_session.command_queue
 					pca_system.mqtt_state_queue = mqtt_session.state_queue
@@ -571,6 +601,9 @@ class PCASystemJSONDecoder(JSONDecoder):
 		# StreamController object
 		elif obj_dict[PCASystemJSONEncoder.TYPE] == StreamController.__name__:
 			return self.streamcontroller_from_dict(obj_dict)
+		# MQTTSession object
+		elif obj_dict[PCASystemJSONEncoder.TYPE] == MQTTSession.__name__:
+			return self.mqtt_session_from_dict(obj_dict)
 		# Default
 		else:
 			return obj_dict
