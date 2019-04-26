@@ -24,6 +24,7 @@ fi
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+KEYS_FOLDER="$SCRIPT_DIR/../../../config/gcp/keys"
 CONFIG_FILE="$SCRIPT_DIR/../../../config/$env/$config_file"
 
 MQTT_SESSION_CONFIG=$(cat $CONFIG_FILE | jq -r .mqtt_session.session_config)
@@ -85,7 +86,6 @@ register_device_iot_core() {
 }
 
 main() {
-    mkdir "$KEYS_FOLDER" 2>/dev/null
     generate_keys "$KEYS_FOLDER"
     register_device_firebase
     register_device_iot_core
