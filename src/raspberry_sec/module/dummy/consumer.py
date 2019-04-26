@@ -36,6 +36,6 @@ class DummyConsumer(Consumer):
 		if producer_type == 'Camera':
 			return Type.CAMERA
 		elif producer_type == 'Pirsensor':
-			return Type.PIRSENSOR
+			return Type.MOTION_DETECTOR
 		else:
 			return Type.CAMERA
