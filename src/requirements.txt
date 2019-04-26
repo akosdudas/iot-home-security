@@ -10,6 +10,4 @@ sklearn
 RPi.GPIO
 pyjwt
 paho-mqtt
-requests
-pyrebase
-cryptography
+cryptography # Requires - sudo apt-get install build-essential libssl-dev libffi-dev python-dev
