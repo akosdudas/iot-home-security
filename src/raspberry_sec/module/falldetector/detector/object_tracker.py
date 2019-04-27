@@ -36,11 +36,13 @@ class ImageObject:
         self.state_history = [self.get_state()]
         self.predict_state_history = [self.predict_state()]
 
+        self.fallen = (False, None)
+
     def update_state(self, matching_obj):
         self.contour = matching_obj.contour
         self.roi = matching_obj.roi
         self.unseen = matching_obj.unseen
-
+        
         if not self.type == ObjectType.HUMAN:
             self.type = matching_obj.type
         

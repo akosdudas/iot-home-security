@@ -6,10 +6,14 @@ def detect_fall_event(obj: ImageObject):
     fall_interval_ms = 1000
 
     if not is_final_position_lying(obj):
-        return (False, )
+        return (False, None)
 
     if not has_pose_stabilized(obj, stabilize_interval_ms):
-        return (False, )
+        return (False, None)
+
+    fallen, timestamp = obj.fallen
+    if fallen:
+        return (fallen, timestamp)
 
     (fall_occured, timestamp) = has_fall_occured(obj, stabilize_interval_ms, fall_interval_ms)
 

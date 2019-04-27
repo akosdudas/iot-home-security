@@ -41,12 +41,15 @@ class FallDetector():
             objects.append(obj)
         self.scene.update_objects(objects, self.frame, timestamp)
 
-        # TODO detect fall, respond with True if a human fall was detected, False otherwise
+        falls = []
         human_ids = self.scene.get_human_objects()
         for human in human_ids:
-            fall = detect_fall_event(self.scene.objects[human])
-            pass
-        return False
+            fall_occured, timestamp = detect_fall_event(self.scene.objects[human])
+            self.scene.objects[human].fallen = (fall_occured, timestamp)
+            if fall_occured:
+                falls.append(timestamp)
+        
+        return falls
 
     def draw(self):
         # If there were no processed frames, drawing is not possible
