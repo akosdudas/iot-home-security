@@ -37,5 +37,9 @@ class StatePlotter:
         self.y.plot([state.y for state in states], color=color, linewidth=1)
         self.h2w.plot([state.h / state.w for state in states], color=color, linewidth=1)
         self.angle.plot([state.angle for state in states], color=color, linewidth=1)
+        plt.pause(0.001)
+
+    def dismiss(self):
+        plt.close(self.fig)
 
 plotter = StatePlotter()

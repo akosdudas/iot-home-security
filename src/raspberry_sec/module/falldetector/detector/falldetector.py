@@ -2,10 +2,10 @@ import numpy as np
 import cv2
 import imutils
 
-from .object_tracker import ImageObject
-from .scene import Scene
-from .fgbg import BS, CNT
-from .utils import undistort_frame
+from raspberry_sec.module.falldetector.detector.object_tracker import ImageObject
+from raspberry_sec.module.falldetector.detector.scene import Scene
+from raspberry_sec.module.falldetector.detector.fgbg import BS, CNT
+from raspberry_sec.module.falldetector.detector.utils import undistort_frame
 
 class FallDetector():
 
@@ -16,7 +16,7 @@ class FallDetector():
         self.frame = None
         self.mask = None
 
-    def process_frame(self, input_frame):
+    def process_frame(self, input_frame, timestamp):
         # Resize frame to uniform size
         self.frame = imutils.resize(input_frame, width=min(500, input_frame.shape[1]))
         # Background subtraction
@@ -30,7 +30,7 @@ class FallDetector():
         objects = []
 
         for contour in contours:
-            obj = ImageObject(0, contour, self.frame)
+            obj = ImageObject(0, contour, self.frame, timestamp)
             if obj.get_area() < 1000:
                 continue
             if obj.get_area() > 50000:
@@ -38,7 +38,7 @@ class FallDetector():
             if obj.detect_human():
                 self.human_cnt += 1
             objects.append(obj)
-        self.scene.update_objects(objects, self.frame)
+        self.scene.update_objects(objects, self.frame, timestamp)
 
         # TODO detect fall, respond with True if a human fall was detected, False otherwise
         return False
@@ -67,6 +67,9 @@ if __name__ == '__main__':
         k = cv2.waitKey(1) & 0xff
         if k == 27:
             break
+        # If b key is pressed, execute pass statement for possible breakpoint
+        elif k == 66 or k == 98:
+            pass
     
     cap.release()
     cv2.destroyAllWindows()

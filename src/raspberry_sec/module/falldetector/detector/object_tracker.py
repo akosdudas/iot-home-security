@@ -6,9 +6,8 @@ from imutils.object_detection import non_max_suppression
 
 from enum import Enum
 
-from .people_detector import HOGDetector, MobileNetSSD
-
-from .state_predictor import State, StatePredictor
+from raspberry_sec.module.falldetector.detector.people_detector import HOGDetector, MobileNetSSD
+from raspberry_sec.module.falldetector.detector.state_predictor import State, StatePredictor
 
 #from utils import plotter
 
@@ -23,7 +22,7 @@ class ImageObject:
     MATCH_AREA_TRESHOLD = 2
 
 
-    def __init__(self, obj_id, contour, frame):
+    def __init__(self, obj_id, contour, frame, timestamp):
         self.id = obj_id        
         self.contour = contour
         self.type = ObjectType.OBJECT
@@ -33,6 +32,7 @@ class ImageObject:
         self.people_detector = HOGDetector()
         self.sp = StatePredictor(initial_pred_state=self.get_state())
 
+        self.timestamps = [timestamp]
         self.state_history = [self.get_state()]
         self.predict_state_history = [self.predict_state()]
 
@@ -40,9 +40,11 @@ class ImageObject:
         self.contour = matching_obj.contour
         self.roi = matching_obj.roi
         self.unseen = matching_obj.unseen
+
         if not self.type == ObjectType.HUMAN:
             self.type = matching_obj.type
-
+        
+        self.timestamps.append(matching_obj.timestamps[-1])
         self.state_history.append(self.get_state())
         self.predict_state_history.append(self.predict_state())
 
@@ -58,7 +60,7 @@ class ImageObject:
         angle = self.get_angle()
         if not angle:
             angle = 0
-        return State(cm[0], cm[1], h, w, angle)
+        return State(cm[0], cm[1], h, w, abs(angle))
 
     def get_roi(self, frame):
         x,y,u,v = self.get_rect()
@@ -187,7 +189,7 @@ class ImageObject:
         #return sorted(candidates, key=lambda k: k['dist_sq'])
         
     @staticmethod
-    def merge_objects(objects: list, frame):
+    def merge_objects(objects: list, frame, timestamp):
         # convexhull, approxpoly
         
         if not objects:
@@ -196,7 +198,7 @@ class ImageObject:
         # Merge object contours
         merged_contours = np.concatenate([o.contour for o in objects])
         hull = cv2.convexHull(merged_contours, returnPoints=True)
-        merged_object = ImageObject(0, hull, frame)
+        merged_object = ImageObject(0, hull, frame, timestamp)
         return merged_object
         
 

@@ -1,4 +1,4 @@
-from .object_tracker import ImageObject, ObjectType
+from raspberry_sec.module.falldetector.detector.object_tracker import ImageObject, ObjectType
 
 import operator
 
@@ -17,33 +17,7 @@ class Scene():
         Scene.i += 1
         return i
 
-    def add_object(self, new_obj: ImageObject):
-        for i, obj in self.objects.items():
-            obj.unseen += 1
-
-        contain_list = {}
-        for i, obj in self.objects.items():
-            #if(new_obj.distance_square_from(obj) < Scene.DIST_ALLOWED_SQ):
-            if(obj.contains(new_obj) and new_obj.distance_square_from(obj) < Scene.DIST_ALLOWED_SQ):
-                contain_list[i] = new_obj.distance_square_from(obj)
-
-        if len(contain_list):
-            min_dist_id = min(contain_list.items(), key = operator.itemgetter(1))[0]
-            self.objects[min_dist_id].update_state(new_obj)
-        else:
-            new_obj.id = Scene.get_id()
-            self.objects[new_obj.id] = new_obj
-
-
-        expired_list = []
-        for i, obj in self.objects.items():
-            if(obj.unseen > Scene.UNSEEN_ALLOWED):
-                expired_list.append(i)
-
-        for i in expired_list:    
-            del self.objects[i]
-
-    def update_objects(self, detected_objects: list, frame):
+    def update_objects(self, detected_objects: list, frame, timestamp):
         detected_objects_copy = detected_objects.copy()
         # Increase the age of all historical objects in the scene
         for i, obj in self.objects.items():
@@ -83,7 +57,7 @@ class Scene():
                     contained_objects.append(detected)
             # Try to merge objects, fail if grows too big or stays to small
             if contained_objects:
-                merged_object = ImageObject.merge_objects(contained_objects, frame)
+                merged_object = ImageObject.merge_objects(contained_objects, frame, timestamp)
                 # If successful - Deregister used detected objects, state update of historic object  
                 unhandled_object.update_state(merged_object)
                 for o in contained_objects:
@@ -103,6 +77,7 @@ class Scene():
         #TODO predict states for unmatched non-expired historical object based on past states
         # aka step Kalman-filter by 1
         for unhandled_object in [self.objects[obj_id] for obj_id in self.objects.keys() if self.objects[obj_id].unseen > 0]:
+            unhandled_object.timestamps.append(timestamp)
             unhandled_object.update_state(unhandled_object)
 
         for i in expired_list:    
