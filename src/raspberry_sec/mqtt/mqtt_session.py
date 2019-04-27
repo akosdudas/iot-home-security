@@ -104,7 +104,8 @@ class MQTTSession(ProcessReady):
                 password=create_jwt(
                     self.config.project_id, 
                     self.config.private_key_file, 
-                    self.config.algorithm
+                    self.config.algorithm,
+                    self.config.jwt_expires_minutes
                 )
         )
 
@@ -123,7 +124,7 @@ class MQTTSession(ProcessReady):
         self.client.on_message = self.on_message
 
         # Connect to the Google MQTT bridge.
-        self.client.connect(self.config.mqtt_bridge_hostname, self.config.mqtt_bridge_port)
+        self.client.connect(self.config.mqtt_bridge_hostname, self.config.mqtt_bridge_port, keepalive=self.config.keep_alive minutes*60)
 
         # The topic that the device will receive commands on.
         mqtt_command_topic = '/devices/{}/commands/#'.format(self.config.device_id)
@@ -199,7 +200,7 @@ class MQTTSession(ProcessReady):
         self.client.disconnect()
         self.client = None
 
-def create_jwt(project_id, private_key_file, algorithm):
+def create_jwt(project_id, private_key_file, algorithm, expires_minutes):
     """Creates a JWT (https://jwt.io) to establish an MQTT connection.
         Args:
          project_id: The cloud project ID this device belongs to
@@ -218,7 +219,7 @@ def create_jwt(project_id, private_key_file, algorithm):
             # The time that the token was issued at
             'iat': datetime.datetime.utcnow(),
             # The time the token expires.
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=expires_minutes),
             # The audience field should always be set to the GCP project id.
             'aud': project_id
     }
