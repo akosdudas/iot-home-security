@@ -6,6 +6,7 @@ from raspberry_sec.module.falldetector.detector.object_tracker import ImageObjec
 from raspberry_sec.module.falldetector.detector.scene import Scene
 from raspberry_sec.module.falldetector.detector.fgbg import BS, CNT
 from raspberry_sec.module.falldetector.detector.utils import undistort_frame
+from raspberry_sec.module.falldetector.detector.fall_event_detector import detect_fall_event
 
 class FallDetector():
 
@@ -41,6 +42,10 @@ class FallDetector():
         self.scene.update_objects(objects, self.frame, timestamp)
 
         # TODO detect fall, respond with True if a human fall was detected, False otherwise
+        human_ids = self.scene.get_human_objects()
+        for human in human_ids:
+            fall = detect_fall_event(self.scene.objects[human])
+            pass
         return False
 
     def draw(self):

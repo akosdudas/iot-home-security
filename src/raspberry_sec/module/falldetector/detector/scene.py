@@ -83,4 +83,9 @@ class Scene():
         for i in expired_list:    
             del self.objects[i]
 
-        
+    def get_human_objects(self):
+        human_ids = []
+        for i, obj in self.objects.items():
+            if obj.type == ObjectType.HUMAN:
+                human_ids.append(obj.id)
+        return human_ids

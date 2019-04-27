@@ -138,12 +138,15 @@ class ImageObject:
             return False
     
     def get_pose(self):
-        x,y,w,h = self.get_rect_wh()
+        x,y,h,w,angle = self.get_state().to_np_array()
         ratio = h / w
         if ratio > 1.5:
             pose = "STANDING"
         elif ratio > 0.5:
-            pose = "SITTING"
+            if angle > np.pi / 4:
+                pose = "SITTING"
+            else:
+                pose = "LYING"
         else:
             pose = "LYING"
         return pose
