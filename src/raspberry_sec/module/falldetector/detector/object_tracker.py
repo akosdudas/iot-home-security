@@ -139,6 +139,10 @@ class ImageObject:
     
     def get_pose(self):
         x,y,h,w,angle = self.get_state().to_np_array()
+        return ImageObject.calculate_pose(h, w, angle)
+    
+    @staticmethod
+    def calculate_pose(h, w, angle):
         ratio = h / w
         if ratio > 1.5:
             pose = "STANDING"
