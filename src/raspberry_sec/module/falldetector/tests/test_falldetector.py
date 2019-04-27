@@ -1,6 +1,7 @@
 import cv2
 import sys, os
 import time
+import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../..'))
 from raspberry_sec.module.falldetector.detector.falldetector import FallDetector
@@ -29,11 +30,18 @@ def test_falldetector_algo(fps, video_file, show_frame=True):
 
         timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
 
+
+        start_time = datetime.datetime.now()
         for fall in fd.process_frame(frame, timestamp):
             falls.add(fall)
+        end_time = datetime.datetime.now()
+
+        delta = (end_time - start_time)
+
+        print('processing time is {} ms'.format(str(delta.microseconds / 1000)))
 
         if show_frame:
-            print(timestamp)
+            #print(timestamp)
             fd.draw()
             cv2.imshow('frame', fd.frame)
 
