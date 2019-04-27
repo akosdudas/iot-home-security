@@ -77,7 +77,7 @@ def test_performance(videos_folder, output_folder):
         for scenario in scenarios:
             for video in videos:
                 video_file = os.path.join(videos_folder, scenario, video + '.avi')
-                falls = test_falldetector_algo(fps, video_file, show_frame=False)
+                falls = test_falldetector_algo(fps, video_file, show_frame=True)
                 results_file = os.path.join(output_folder, 'fps-{}-{}.txt'.format(str(fps), scenario))
                 with open(results_file, 'a+') as f:
                     f.write('{} - {}\n'.format(video, str(falls)))

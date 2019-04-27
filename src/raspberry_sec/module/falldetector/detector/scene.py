@@ -53,7 +53,7 @@ class Scene():
             # Get all new object detected contained by the projected state of the historic object
             contained_objects = []
             for detected in detected_objects_copy:
-                if unhandled_object.predict_state_history[-1].contains(detected.state_history[-1]):
+                if unhandled_object.predicted_state.contains(detected.state_history[-1]):
                     contained_objects.append(detected)
             # Try to merge objects, fail if grows too big or stays to small
             if contained_objects:

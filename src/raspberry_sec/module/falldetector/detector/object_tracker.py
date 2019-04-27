@@ -34,7 +34,7 @@ class ImageObject:
 
         self.timestamps = [timestamp]
         self.state_history = [self.get_state()]
-        self.predict_state_history = [self.predict_state()]
+        self.predicted_state = self.predict_state()
 
         self.fallen = (False, None)
 
@@ -47,8 +47,11 @@ class ImageObject:
             self.type = matching_obj.type
         
         self.timestamps.append(matching_obj.timestamps[-1])
+        if len(self.state_history) > 500:
+            self.state_history.pop(0)
+            
         self.state_history.append(self.get_state())
-        self.predict_state_history.append(self.predict_state())
+        self.predicted_state = self.predict_state()
 
     def predict_state(self):
         return self.sp.predict_state(self.get_state())
@@ -171,7 +174,7 @@ class ImageObject:
             cv2.ellipse(frame, ellipse, (0,255,0), 2)
 
         self.state_history[-1].draw(frame)
-        self.predict_state_history[-1].draw(frame)
+        self.predicted_state.draw(frame)
 
     def distance_square_from(self, other):
         cm_self = self.get_center_of_mass()
@@ -189,7 +192,7 @@ class ImageObject:
 
     def find_match_candidates(self, detected_objects: list):
         candidates = []
-        predicted_state = self.predict_state_history[-1]
+        predicted_state = self.predicted_state
         for obj in detected_objects:
             area_ratio = float(predicted_state.get_area()) / obj.state_history[-1].get_area()
             if area_ratio < ImageObject.MATCH_AREA_TRESHOLD and area_ratio > 1.0/ImageObject.MATCH_AREA_TRESHOLD:

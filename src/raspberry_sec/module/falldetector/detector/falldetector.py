@@ -13,7 +13,6 @@ class FallDetector():
     def __init__(self):
         self.bs = CNT()
         self.scene = Scene()
-        self.human_cnt = 0
         self.frame = None
         self.mask = None
 
@@ -36,8 +35,7 @@ class FallDetector():
                 continue
             if obj.get_area() > 50000:
                 continue
-            if obj.detect_human():
-                self.human_cnt += 1
+            obj.detect_human()
             objects.append(obj)
         self.scene.update_objects(objects, self.frame, timestamp)
 
