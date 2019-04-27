@@ -201,6 +201,10 @@ class PCASystem(ProcessReady):
 			proc.start()
 
 	def start_mqtt_session(self, context: ProcessContext):
+		"""
+		Creates the mqtt session and fires it up. 
+		:param: context: holds the 'stop event' and the logging queue
+		"""
 		mqtt_context = ProcessContext(
 			stop_event=context.stop_event,
 			log_queue=context.logging_queue
@@ -218,6 +222,8 @@ class PCASystem(ProcessReady):
 		"""
 		Waits for the stop event to be set and then initiates the shutdown
 		of the system. Producers, streams and the stream controller will be terminated.
+		While the system is up and an mqtt session is configured for the system,
+		peridically check and handle incoming mqtt messages.
 		:param context: holds the 'event' object
 		"""
 		while not context.stop_event.is_set():
@@ -241,6 +247,11 @@ class PCASystem(ProcessReady):
 			proc.join()
 	
 	def publish_state(self):
+		"""
+		Publish the state of the PCASystem's producers via mqtt. Currently, producers of 
+		type CAMERA and MOTION_DETECTOR are supported. The camera images are sent in jpg 
+		format. 
+		"""
 		data = { }
 
 		for p in self.producer_set:
@@ -271,11 +282,16 @@ class PCASystem(ProcessReady):
 			pass
 	
 	def process_commands(self):
+		"""
+		Process the commands received via the mqtt session.
+		If a status update command is received, publish the status of the device
+		via mqtt.
+		"""
 		PCASystem.LOGGER.debug('Processing MQTT Commands')
 		try:
 			command = self.mqtt_command_queue.get(block=False)
 			if command == 'status_update_request':
-				PCASystem.LOGGER.info('State update request received')
+				PCASystem.LOGGER.info('Status update request received')
 				self.publish_state()
 		except QueueEmpty as e:
 			PCASystem.LOGGER.debug('MQTT Command queue Empty')
@@ -446,6 +462,10 @@ class PCASystemJSONEncoder(JSONEncoder):
 
 	@staticmethod
 	def mqtt_session_to_dict(obj: MQTTSession):
+		"""
+		:param obj: MQTTSession object
+		:return: dict version of the output
+		"""
 		obj_dict = dict()
 		obj_dict['session_config'] = obj.config.__dict__
 		obj_dict.pop('private_key_file', None)
@@ -549,6 +569,10 @@ class PCASystemJSONDecoder(JSONDecoder):
 			raise
 
 	def mqtt_session_from_dict(self, obj_dict: dict):
+		"""
+		:param obj_dict: JSON structure
+		:return: MQTTSession object
+		"""
 		try:
 			keys_dir = get_mqtt_keys_dir()
 			session_config = obj_dict["session_config"]

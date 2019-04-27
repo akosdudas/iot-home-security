@@ -3,7 +3,7 @@ from uuid import getnode
 def check_platform() -> bool:
 	"""
 	Check if the HW platform the SW is running on is a Raspberry Pi
-	:return True if the HW plaform is issued by the Raspberry Pi Foundation, False otherwise
+	:return: True if the HW plaform is issued by the Raspberry Pi Foundation, False otherwise
 	"""
 	MAC_OUI_RASPBERRY_FOUNDATION = ['b827eb', 'dca632']
 	
@@ -13,6 +13,11 @@ def check_platform() -> bool:
 	return mac_addr_oui in MAC_OUI_RASPBERRY_FOUNDATION
 
 def is_gpio_floating(pin: int) -> bool:
+    """
+    Check if a GPIO pin is floating on a raspberry pi
+    :param pin: the number of the pin to be checked
+    :return: True if the pin is floating, False otherwise
+    """
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
     

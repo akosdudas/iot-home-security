@@ -120,6 +120,7 @@ class ProcessReady:
 		"""
 		Common entry point for a new process
 		:param context: containing the arguments when creating a new process
+		:param other: everything else that might be needed, child specific data
 		"""
 		ProcessReady.setup_logging(context.logging_queue)
 		self.run(context, *args)
@@ -202,10 +203,18 @@ class LogQueueListener:
 				raise
 
 def get_config_dir():
+	"""
+	This function can be used to get the folder in which the system configuration 
+	files are stored. 
+	"""
 	current_dir = os.path.dirname(os.path.abspath(__file__))
 	config_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'config'))
 	return config_dir
 
 def get_mqtt_keys_dir():
+	"""
+	This function can be used to get the folder in which the mqtt session keys 
+	are stored.
+	"""
 	keys_dir = os.path.abspath(os.path.join(get_config_dir(), 'gcp', 'keys'))
 	return keys_dir
