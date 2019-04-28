@@ -16,9 +16,10 @@ class FalldetectorConsumer(Consumer):
 
     def __init__(self, parameters: dict):
         super().__init__(parameters)
-        # ToDo
+        
+        self.prev_timestamp = 0
         self.initialized = False
-        pass
+        
 
     def get_name(self):
         return 'FalldetectorConsumer'
@@ -34,21 +35,34 @@ class FalldetectorConsumer(Consumer):
             self.initialize()
 
         img = context.data
-        context.alert = False
+        timestamp = context.timestamp
 
-        if img is not None:
-            is_fall_detected = self.fall_detector.process_frame(img)
-            if is_fall_detected:
-                # TODO fire alert
-                pass
-            self.fall_detector.draw()
-            cv2.imshow('frame', self.fall_detector.frame)
-            cv2.imshow('mask', self.fall_detector.mask)
-            cv2.waitKey(1)
-        else:
-            FalldetectorConsumer.LOGGER.warning('No image')
+        FalldetectorConsumer.LOGGER.debug(timestamp)
+
+        # If no image or timestamp is sent, don't process
+        if img is None or timestamp is None:
+            FalldetectorConsumer.LOGGER.warning('Image or timestamp not received')
             time.sleep(self.parameters['timeout'])
+            return context
+
+        # Don't process the same frame twice
+        if self.prev_timestamp == timestamp:
+            FalldetectorConsumer.LOGGER.debug('Skipping frame')
+            time.sleep(self.parameters['timeout'])
+            return context
+
+        # Process frame
+        falls = self.fall_detector.process_frame(img, timestamp)
+        if len(falls) > 0:
+            context.alert = False
+            context._alert_data = "Fall detected"
+        self.fall_detector.draw()
+        cv2.imshow('frame', self.fall_detector.frame)
+        cv2.imshow('mask', self.fall_detector.mask)
+        cv2.waitKey(1)
         
+        self.prev_timestamp = timestamp
+
         return context
 
 

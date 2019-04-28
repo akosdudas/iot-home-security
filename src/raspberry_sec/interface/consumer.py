@@ -2,7 +2,7 @@ class ConsumerContext:
 	"""
 	Class for storing data when transitioning between Consumer-s
 	"""
-	def __init__(self, _data, _alert: bool, _alert_data=None):
+	def __init__(self, _data, _alert: bool, _alert_data=None, _timestamp=None):
 		"""
 		Constructor
 		:param _data: sample data the consumers work on
@@ -12,6 +12,7 @@ class ConsumerContext:
 		self.data = _data
 		self.alert = _alert
 		self.alert_data = _alert_data
+		self.timestamp = _timestamp
 
 
 class Consumer:

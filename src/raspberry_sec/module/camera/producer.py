@@ -1,5 +1,6 @@
 import logging
 import cv2
+import time
 from raspberry_sec.interface.producer import Producer, ProducerDataManager, ProducerDataProxy, Type
 from raspberry_sec.system.util import ProcessContext
 
@@ -43,7 +44,9 @@ class CameraProducer(Producer):
 			while not context.stop_event.is_set():
 				ret_val, img = cam.read()
 				if ret_val:
-					data_proxy.set_data(img)
+					# timestamp of the image in milliseconds
+					timestamp = time.time() * 1000
+					data_proxy.set_data((img, timestamp))
 				else:
 					unsuccessful_images += 1
 					CameraProducer.LOGGER.warning('Could not capture image')
@@ -58,7 +61,10 @@ class CameraProducer(Producer):
 
 	def get_data(self, data_proxy: ProducerDataProxy):
 		CameraProducer.LOGGER.debug('Producer called')
-		return data_proxy.get_data()
+		return data_proxy.get_data()[0]
+	
+	def get_timestamp(self, data_proxy: ProducerDataProxy):
+		return data_proxy.get_data()[1]
 
 	def get_name(self):
 		"""
