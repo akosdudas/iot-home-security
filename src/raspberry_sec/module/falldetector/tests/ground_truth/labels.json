@@ -1,0 +1,188 @@
+{
+    "chute01": {
+        "falls": [
+            {
+                "fall_started_after": 8000,
+                "fall_ended_before": 10000
+            }
+        ]
+    },
+    "chute02": {
+        "falls": [
+            {
+                "fall_started_after": 2000,
+                "fall_ended_before": 4000
+            }
+        ]
+    },
+    "chute03": {
+        "falls": [
+            {
+                "fall_started_after": 4000,
+                "fall_ended_before": 6000
+            }
+        ]
+    },
+    "chute04": {
+        "falls": [
+            {
+                "fall_started_after": 2000,
+                "fall_ended_before": 7000
+            }
+        ]
+    },
+    "chute05": {
+        "falls": [
+            {
+                "fall_started_after": 2000,
+                "fall_ended_before": 4000
+            }
+        ]
+    },
+    "chute06": {
+        "falls": [
+            {
+                "fall_started_after": 4000,
+                "fall_ended_before": 6000
+            }
+        ]
+    },
+    "chute07": {
+        "falls": [
+            {
+                "fall_started_after": 3000,
+                "fall_ended_before": 5000
+            }
+        ]
+    },
+    "chute08": {
+        "falls": [
+            {
+                "fall_started_after": 2000,
+                "fall_ended_before": 4000
+            }
+        ]
+    },
+    "chute09": {
+        "falls": [
+            {
+                "fall_started_after": 5000,
+                "fall_ended_before": 7000
+            }
+        ]
+    },
+    "chute10": {
+        "falls": [
+            {
+                "fall_started_after": 4000,
+                "fall_ended_before": 6000
+            }
+        ]
+    },
+    "chute11": {
+        "falls": [
+            {
+                "fall_started_after": 3000,
+                "fall_ended_before": 5000
+            }
+        ]
+    },
+    "chute12": {
+        "falls": [
+            {
+                "fall_started_after": 5000,
+                "fall_ended_before": 7000
+            }
+        ]
+    },
+    "chute13": {
+        "falls": [
+            {
+                "fall_started_after": 6500,
+                "fall_ended_before": 8500
+            }
+        ]
+    },
+    "chute14": {
+        "falls": [
+            {
+                "fall_started_after": 8000,
+                "fall_ended_before": 10000
+            }
+        ]
+    },
+    "chute15": {
+        "falls": [
+            {
+                "fall_started_after": 6500,
+                "fall_ended_before": 8000
+            }
+        ]
+    },
+    "chute16": {
+        "falls": [
+            {
+                "fall_started_after": 7000,
+                "fall_ended_before": 9000
+            }
+        ]
+    },
+    "chute17": {
+        "falls": [
+            {
+                "fall_started_after": 5000,
+                "fall_ended_before": 7500
+            }
+        ]
+    },
+    "chute18": {
+        "falls": [
+            {
+                "fall_started_after": 5500,
+                "fall_ended_before": 7000
+            }
+        ]
+    },
+    "chute19": {
+        "falls": [
+            {
+                "fall_started_after": 4000,
+                "fall_ended_before": 6500
+            }
+        ]
+    },
+    "chute20": {
+        "falls": [
+            {
+                "fall_started_after": 4000,
+                "fall_ended_before": 7000
+            }
+        ]
+    },
+    "chute21": {
+        "falls": [
+            {
+                "fall_started_after": 6000,
+                "fall_ended_before": 8000
+            }
+        ]
+    },
+    "chute22": {
+        "falls": [
+            {
+                "fall_started_after": 6000,
+                "fall_ended_before": 7500
+            }
+        ]
+    },
+    "chute23": {
+        "falls": [
+
+        ]
+    },
+    "chute24": {
+        "falls": [
+
+        ]
+    }
+}
