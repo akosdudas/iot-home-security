@@ -2,6 +2,7 @@ import cv2
 import sys, os
 import time
 import datetime
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../..'))
 from raspberry_sec.module.falldetector.detector.falldetector import FallDetector
@@ -10,8 +11,6 @@ from raspberry_sec.module.falldetector.detector.utils import StatePlotter
 def test_falldetector_algo(fps, video_file, show_frame=True):
     cap = cv2.VideoCapture(video_file)
     fd = FallDetector()
-
-    print(cap.get(cv2.CAP_PROP_FPS))
 
     frame_cnt = -1
     skip_nth = int(120 / fps)
@@ -37,8 +36,6 @@ def test_falldetector_algo(fps, video_file, show_frame=True):
         end_time = datetime.datetime.now()
 
         delta = (end_time - start_time)
-
-        print('processing time is {} ms'.format(str(delta.microseconds / 1000)))
 
         if show_frame:
             #print(timestamp)
@@ -77,18 +74,20 @@ def test_performance(videos_folder, output_folder):
 
     videos = [ 'cam{}'.format(str(i)) for i in range(1, 9)]
 
-    fps_vals = [
-        24
-    ]
+    fps_vals = [ 5, 8, 10, 12, 18, 24, 30 ]
 
-    for fps in fps_vals:    
-        for scenario in scenarios:
-            for video in videos:
-                video_file = os.path.join(videos_folder, scenario, video + '.avi')
-                falls = test_falldetector_algo(fps, video_file, show_frame=True)
-                results_file = os.path.join(output_folder, 'fps-{}-{}.txt'.format(str(fps), scenario))
-                with open(results_file, 'a+') as f:
-                    f.write('{} - {}\n'.format(video, str(falls)))
+    for scenario in scenarios:
+        results = {}
+        for video in videos:
+            results[video] = {}
+            for fps in fps_vals:
+                print(scenario, video, fps)
+                video_file = os.path.join(videos_folder, scenario, video + '.avi')  
+                falls = test_falldetector_algo(fps, video_file, show_frame=False)
+                results[video][str(fps)] = list(falls)
+        results_file = os.path.join(output_folder, '{}.json'.format(scenario))
+        with open(results_file, 'w') as f:
+            json.dump(results, f)
 
 if __name__ == '__main__':
     test_performance(
