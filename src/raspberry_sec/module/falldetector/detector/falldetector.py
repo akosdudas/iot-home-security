@@ -6,7 +6,6 @@ from raspberry_sec.module.falldetector.detector.object_tracker import ImageObjec
 from raspberry_sec.module.falldetector.detector.scene import Scene
 from raspberry_sec.module.falldetector.detector.fgbg import BS, CNT, GSOC, MOG2
 from raspberry_sec.module.falldetector.detector.people_detector import HOGDetector, MobileNetSSD
-from raspberry_sec.module.falldetector.detector.utils import undistort_frame
 from raspberry_sec.module.falldetector.detector.fall_event_detector import FallEventDetector
 
 class FallDetector():
@@ -83,7 +82,9 @@ class FallDetector():
         falls = []
         human_ids = self.scene.get_human_objects()
         for human in human_ids:
-            fall_occured, timestamp = self.fall_event_detector.detect_fall_event(self.scene.objects[human])
+            fall_occured, timestamp = self.fall_event_detector.detect_fall_event(
+                self.scene.objects[human]
+            )
             self.scene.objects[human].fallen = (fall_occured, timestamp)
             if fall_occured:
                 falls.append(timestamp)
@@ -97,26 +98,3 @@ class FallDetector():
         for i, o in self.scene.objects.items():
             o.draw(self.frame)
 
-if __name__ == '__main__':
-    cap = cv2.VideoCapture('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/chute01/cam8.avi')
-    fd = FallDetector()
-
-    while(1):
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        fd.process_frame(frame)
-        fd.draw()
-
-        cv2.imshow('frame', fd.frame)
-
-        k = cv2.waitKey(1) & 0xff
-        if k == 27:
-            break
-        # If b key is pressed, execute pass statement for possible breakpoint
-        elif k == 66 or k == 98:
-            pass
-    
-    cap.release()
-    cv2.destroyAllWindows()

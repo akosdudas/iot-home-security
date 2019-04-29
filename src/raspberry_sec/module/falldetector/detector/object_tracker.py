@@ -1,8 +1,6 @@
 import numpy as np 
 import cv2
-
 import imutils
-from imutils.object_detection import non_max_suppression
 
 from enum import Enum
 from types import SimpleNamespace
@@ -206,11 +204,16 @@ class ImageObject:
         candidates = []
         predicted_state = self.predicted_state
         for obj in detected_objects:
-            area_ratio = float(predicted_state.get_area()) / obj.state_history[-1].get_area()
-            if area_ratio < ImageObject.MATCH_AREA_TRESHOLD and area_ratio > 1.0/ImageObject.MATCH_AREA_TRESHOLD:
-                candidates.append({"mc_obj": obj, "dist_sq": predicted_state.dist_square_from(obj.state_history[-1])})
+            latest_state = obj.state_history[-1]
+            area_ratio = float(predicted_state.get_area()) / latest_state.get_area()
+            if (area_ratio < ImageObject.MATCH_AREA_TRESHOLD and 
+                    area_ratio > 1.0/ImageObject.MATCH_AREA_TRESHOLD):
+                candidates.append({
+                    "mc_obj": obj, 
+                    "dist_sq": predicted_state.dist_square_from(latest_state)
+                })
+
         return candidates
-        #return sorted(candidates, key=lambda k: k['dist_sq'])
         
     @staticmethod
     def merge_objects(objects: list, frame, timestamp):
@@ -225,17 +228,3 @@ class ImageObject:
         merged_object = ImageObject(0, hull, frame, timestamp)
         return merged_object
         
-
-if __name__ == '__main__':
-    image_orig = cv2.imread('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/rand_images/German-Sheperd-Image-1-composite.jpg', cv2.IMREAD_COLOR)
-    image = cv2.cvtColor(image_orig, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(image, 127, 255, 0)
-    im2, contours, hierarchy = cv2.findContours(cv2.bitwise_not(thresh), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)    
-    objects = []
-    for c in contours:
-        objects.append(ImageObject(0, c, image_orig))
-    merged = ImageObject.merge_objects(objects, image_orig)
-    cv2.polylines(image_orig, [merged.contour], isClosed=True, color=(0,0,255), thickness=3)
-    cv2.imshow('test_image', image_orig)
-    cv2.waitKey()
-    cv2.destroyAllWindows()

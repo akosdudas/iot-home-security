@@ -51,18 +51,25 @@ class FallEventDetector:
         if interval_end - obj.timestamps[0] < time_interval_ms:
             return False
 
-        interval_start_index = FallEventDetector.get_interval_start_index(obj, time_interval_ms)
+        interval_start_index = FallEventDetector.get_interval_start_index(
+            obj, time_interval_ms
+        )
 
         # Return True, if all state variables has stabilized
-        if not FallEventDetector.has_state_variable_stabilized(obj, "x", interval_start_index, tolerance["pos"]):
+        if not FallEventDetector.has_state_variable_stabilized(
+                obj, "x", interval_start_index, tolerance["pos"]):
             return False
-        if not FallEventDetector.has_state_variable_stabilized(obj, "y", interval_start_index, tolerance["pos"]):
+        if not FallEventDetector.has_state_variable_stabilized(
+                obj, "y", interval_start_index, tolerance["pos"]):
             return False
-        if not FallEventDetector.has_state_variable_stabilized(obj, "h", interval_start_index, tolerance["size"]):
+        if not FallEventDetector.has_state_variable_stabilized(
+                obj, "h", interval_start_index, tolerance["size"]):
             return False
-        if not FallEventDetector.has_state_variable_stabilized(obj, "w", interval_start_index, tolerance["size"]):
+        if not FallEventDetector.has_state_variable_stabilized(
+                obj, "w", interval_start_index, tolerance["size"]):
             return False
-        if not FallEventDetector.has_state_variable_stabilized(obj, "angle", interval_start_index, tolerance["angle"]):
+        if not FallEventDetector.has_state_variable_stabilized(
+                obj, "angle", interval_start_index, tolerance["angle"]):
             return False
         return True
 
@@ -70,7 +77,10 @@ class FallEventDetector:
     def has_state_variable_stabilized(obj: ImageObject, state_var_name, interval_start_index, tolerance):
         # Calculate standard deviations of the state variables 
         # in the given interval
-        var = [state.__dict__[state_var_name] for state in obj.state_history[interval_start_index:]]
+        var = [
+            state.__dict__[state_var_name] for state in 
+                obj.state_history[interval_start_index:]
+        ]
         dev = np.std(var)
         if dev > tolerance:
             return False
@@ -78,10 +88,17 @@ class FallEventDetector:
             return True
 
     def has_fall_occured(self, obj: ImageObject):
-        stabilized_interval_start_index = FallEventDetector.get_interval_start_index(obj, self.stabilize_interval_ms)
-        fall_interval_start_index = FallEventDetector.get_interval_start_index(obj, self.fall_interval_ms + self.stabilize_interval_ms)
+        stabilized_interval_start_index = FallEventDetector.get_interval_start_index(
+            obj, self.stabilize_interval_ms
+        )
+        fall_interval_start_index = FallEventDetector.get_interval_start_index(
+            obj, self.fall_interval_ms + self.stabilize_interval_ms
+        )
 
-        states = [state for state in obj.state_history[fall_interval_start_index:stabilized_interval_start_index]]
+        states = [
+            state for state in 
+                obj.state_history[fall_interval_start_index:stabilized_interval_start_index]
+        ]
         for state in states:
             pose = ImageObject.calculate_pose(state.h, state.w, state.angle)
             if pose == 'STANDING':

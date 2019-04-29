@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import operator
 
-from raspberry_sec.module.falldetector.detector.utils import StatePlotter
-
 class State:
     STATE_VARS = ['x', 'y', 'h', 'w', 'angle']
     DRAWING_COLORS = {
@@ -34,7 +32,8 @@ class State:
 
     # Return true if other is contained in the bounding rectange of self
     def contains(self, other):
-        return (self.x - self.w/2.0) < other.x < (self.x + self.w/2.0) and (self.y - self.h/2.0) < other.y < (self.y + self.h/2.0)
+        return ((self.x - self.w/2.0) < other.x < (self.x + self.w/2.0) and 
+               (self.y - self.h/2.0) < other.y < (self.y + self.h/2.0))
 
     @staticmethod
     def from_np_array(input_array):
@@ -128,34 +127,3 @@ class StatePredictor:
         self.kalman.correct((state - self.initial_pred_state).to_np_array())
         prediction = State.from_np_array(self.kalman.predict()) + self.initial_pred_state
         return prediction
-
-if __name__ == '__main__':
-
-    if False:
-        state = State(10, 20)
-        state2 = State(11.13, 12.14)
-        state3 = state + state2
-        state4 = state - state2
-        arr = state2.to_np_array()
-        state5 = State.from_np_array(arr)
-
-    import random as rand
-    coords = [val + rand.gauss(0, 40) for val in range(100, 300)]
-    arr = np.ones(StatePredictor.MEAS_VECTOR_LEN, dtype=np.float32) * coords[0]
-    sp = StatePredictor(
-        State.from_np_array(arr)
-        )
-    prs = []
-    coor_hist = []
-    plotter = StatePlotter()
-    for coor in coords:
-        pr = sp.predict_state(
-            State.from_np_array(np.ones(StatePredictor.MEAS_VECTOR_LEN, np.float32) * coor)
-            )
-        coor_hist.append(State.from_np_array(np.ones(StatePredictor.MEAS_VECTOR_LEN, dtype=np.float32) * coor))
-        prs.append(pr)
-        plotter.update_plot(prs, coor_hist)
-        import time
-        time.sleep(0.1)
-
-    pass
