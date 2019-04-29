@@ -3,14 +3,9 @@
     "stream_controller": {
         "__type__": "StreamController",
         "action": {
-            "__type__": "EmailAction",
+            "__type__": "DummyAction",
             "parameters": {
-                "from_addr": "cicavirag@gmail.com",
-                "password": "",
-                "smtp_addr": "smtp.gmail.com:587",
-                "subject": "RaspberryPi ALERT",
-                "to_addr": "nagybalint000@gmail.com",
-                "user": "mt.raspberry.pi"
+                "dummy": "dummy"
             }
         },
         "msg_limit": "100",
