@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import operator
 
 class State:
+    """
+    Class for the state representation of an ImageObject
+    """
+
     STATE_VARS = ['x', 'y', 'h', 'w', 'angle']
     DRAWING_COLORS = {
         'cm': (0,0,255),
@@ -13,30 +17,57 @@ class State:
     ANGLE_LINE_LENGTH = 50
 
     def __init__(self, *args):
+        """
+        Constructor
+        """
         for i, state_var in enumerate(State.STATE_VARS):
             self.__setattr__(state_var, args[i])
     
     def get_area(self):
+        """
+        Get the area enclosed by the State object
+        :return: The area of the State object in pixels
+        """
         return self.h * self.w
     
     def dist_square_from(self, other):
+        """
+        Get square of the distance of the State object from an other State
+        :param other: State
+        :return: The square of the distance of the State objects
+        """
         dx = self.x - other.x
         dy = self.y - other.y
         return dx*dx + dy*dy
 
 
     def to_np_array(self):
+        """
+        Convert the State object to a numpy array
+        :return: numpy array representation of the object
+        """
         return np.array(
             [np.float32(self.__dict__[state_var]) for state_var in State.STATE_VARS], np.float32
         )
 
     # Return true if other is contained in the bounding rectange of self
     def contains(self, other):
+        """
+        Check if the State object contains an other State 
+        :param other: State
+        :return: True if the State object contains the other State specified,
+                False otherwise
+        """
         return ((self.x - self.w/2.0) < other.x < (self.x + self.w/2.0) and 
                (self.y - self.h/2.0) < other.y < (self.y + self.h/2.0))
 
     @staticmethod
     def from_np_array(input_array):
+        """
+        Create State object based on a numpy array representation of State
+        :param input_array: numpy array representation of a State objects
+        :return: State
+        """
         return State(*[state_var for state_var in input_array])
 
     def __add__(self, other):
@@ -56,6 +87,11 @@ class State:
         return State.from_np_array(arr_out)
 
     def draw(self, frame, rect_color = None):
+        """
+        Draw State object on a video frame
+        :param frame: Video frame
+        :param rect_color: The color used to draw the State object
+        """
         if rect_color == None:
             rect_color = State.DRAWING_COLORS['bounding_rect']
 
@@ -82,9 +118,18 @@ class State:
         
 
 class StatePredictor:
+    """
+    Class for predicting the variables of a State object for the next frame
+    """
+
     STATE_VECTOR_LEN = 10
     MEAS_VECTOR_LEN = 5
+
     def __init__(self, initial_pred_state: State = None):
+        """
+        Constructor
+        :param initial_pred_state: State objects for initializing the StatePredictor
+        """
 
         self.kalman = cv2.KalmanFilter(
             StatePredictor.STATE_VECTOR_LEN, 
@@ -124,6 +169,11 @@ class StatePredictor:
             self.initial_pred_state = initial_pred_state
 
     def predict_state(self, state):
+        """
+        Predict the variables of a State object for the next frame
+        :param state: State
+        :return: The predicted State for the next frame
+        """
         self.kalman.correct((state - self.initial_pred_state).to_np_array())
         prediction = State.from_np_array(self.kalman.predict()) + self.initial_pred_state
         return prediction
