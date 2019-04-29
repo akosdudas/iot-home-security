@@ -27,7 +27,7 @@ class FalldetectorConsumer(Consumer):
     def initialize(self):
         FalldetectorConsumer.LOGGER.info('Initializing component')
         
-        self.fall_detector = FallDetector()
+        self.fall_detector = FallDetector(self.parameters)
         self.initialized = True
 
     def run(self, context: ConsumerContext):
@@ -54,7 +54,7 @@ class FalldetectorConsumer(Consumer):
         # Process frame
         falls = self.fall_detector.process_frame(img, timestamp)
         if len(falls) > 0:
-            context.alert = False
+            context.alert = True
             context._alert_data = "Fall detected"
         self.fall_detector.draw()
         cv2.imshow('frame', self.fall_detector.frame)

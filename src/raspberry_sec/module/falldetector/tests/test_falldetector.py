@@ -8,9 +8,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../..'))
 from raspberry_sec.module.falldetector.detector.falldetector import FallDetector
 from raspberry_sec.module.falldetector.detector.utils import StatePlotter
 
-def test_falldetector_algo(fps, video_file, show_frame=True):
+def test_falldetector_algo(config, fps, video_file, show_frame=True):
     cap = cv2.VideoCapture(video_file)
-    fd = FallDetector()
+    fd = FallDetector(config)
 
     frame_cnt = -1
     skip_nth = int(120 / fps)
@@ -69,7 +69,7 @@ def test_falldetector_algo(fps, video_file, show_frame=True):
 
     return falls
 
-def test_performance(videos_folder, output_folder):
+def test_performance(config, videos_folder, output_folder):
     scenarios = [ 'chute{}{}'.format('0' if i < 10 else '', str(i)) for i in range(1, 25) ]
 
     videos = [ 'cam{}'.format(str(i)) for i in range(1, 9)]
@@ -83,14 +83,20 @@ def test_performance(videos_folder, output_folder):
             for fps in fps_vals:
                 print(scenario, video, fps)
                 video_file = os.path.join(videos_folder, scenario, video + '.avi')  
-                falls = test_falldetector_algo(fps, video_file, show_frame=False)
+                falls = test_falldetector_algo(config, fps, video_file, show_frame=False)
                 results[video][str(fps)] = list(falls)
         results_file = os.path.join(output_folder, '{}.json'.format(scenario))
         with open(results_file, 'w') as f:
             json.dump(results, f)
 
 if __name__ == '__main__':
-    test_performance(
-        '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/dataset/dataset',
-        '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/results'
-    )
+    config_file = os.path.join(os.path.dirname(__file__), 'test_parameters.json')
+    with open(config_file) as f:
+        config = json.load(f)
+    test_falldetector_algo(config, 24, '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/dataset/dataset/chute02/cam8.avi',)
+    if False:
+        test_performance(
+            config, 
+            '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/dataset/dataset',
+            '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/results'
+        )

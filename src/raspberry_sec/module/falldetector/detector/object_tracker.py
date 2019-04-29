@@ -5,8 +5,8 @@ import imutils
 from imutils.object_detection import non_max_suppression
 
 from enum import Enum
+from types import SimpleNamespace
 
-from raspberry_sec.module.falldetector.detector.people_detector import HOGDetector, MobileNetSSD
 from raspberry_sec.module.falldetector.detector.state_predictor import State, StatePredictor
 
 #from utils import plotter
@@ -20,7 +20,20 @@ class ImageObject:
     # Padding to be added to all sides of the ROI for the object
     PADDING = 30
     MATCH_AREA_TRESHOLD = 2
+    STATE_HISTORY_MAX_LEN = 500
+    STANDING_THRESHOLD = 1.5
+    LYING_THRESHOLD = 0.5
+    LYING_THRESHOLD_ANGLE = np.pi / 4
 
+    @staticmethod
+    def configure(padding, match_area_threshold, state_history_max_len,
+                  standing_threshold, lying_threshold, lying_threshold_angle):
+        ImageObject.PADDING = padding
+        ImageObject.MATCH_AREA_TRESHOLD = match_area_threshold
+        ImageObject.STATE_HISTORY_MAX_LEN = state_history_max_len
+        ImageObject.STANDING_THRESHOLD = standing_threshold
+        ImageObject.LYING_THRESHOLD = lying_threshold
+        ImageObject.LYING_THRESHOLD_ANGLE = lying_threshold_angle
 
     def __init__(self, obj_id, contour, frame, timestamp):
         self.id = obj_id        
@@ -29,7 +42,6 @@ class ImageObject:
         self.roi = self.get_roi(frame)
 
         self.unseen = 0
-        self.people_detector = HOGDetector()
         self.sp = StatePredictor(initial_pred_state=self.get_state())
 
         self.timestamps = [timestamp]
@@ -47,7 +59,7 @@ class ImageObject:
             self.type = matching_obj.type
         
         self.timestamps.append(matching_obj.timestamps[-1])
-        if len(self.state_history) > 500:
+        if len(self.state_history) > ImageObject.STATE_HISTORY_MAX_LEN:
             self.state_history.pop(0)
             
         self.state_history.append(self.get_state())
@@ -132,10 +144,10 @@ class ImageObject:
 
         return (p1, p2)
 
-    def detect_human(self):
+    def detect_human(self, people_detector):
         roi = self.roi.copy()
 
-        if self.people_detector.detect_human(roi)[0]:
+        if people_detector.detect_human(roi)[0]:
             self.type = ObjectType.HUMAN
             return True
         else:
@@ -149,10 +161,10 @@ class ImageObject:
     @staticmethod
     def calculate_pose(h, w, angle):
         ratio = h / w
-        if ratio > 1.5:
+        if ratio > ImageObject.STANDING_THRESHOLD:
             pose = "STANDING"
-        elif ratio > 0.5:
-            if angle > np.pi / 4:
+        elif ratio > ImageObject.LYING_THRESHOLD:
+            if angle > ImageObject.LYING_THRESHOLD_ANGLE:
                 pose = "SITTING"
             else:
                 pose = "LYING"

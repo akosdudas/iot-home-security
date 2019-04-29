@@ -5,10 +5,8 @@ import operator
 class Scene():
     i = 0
 
-    DIST_ALLOWED_SQ = 500
-    UNSEEN_ALLOWED = 5
-
-    def __init__(self):
+    def __init__(self, object_expiration_time):
+        self.object_expiration_time = object_expiration_time
         self.objects = {}
 
     @staticmethod
@@ -71,7 +69,7 @@ class Scene():
         # Delete expired objects
         expired_list = []
         for i, obj in self.objects.items():
-            if(obj.unseen > Scene.UNSEEN_ALLOWED):
+            if(obj.unseen > self.object_expiration_time):
                 expired_list.append(i)
 
         #TODO predict states for unmatched non-expired historical object based on past states
