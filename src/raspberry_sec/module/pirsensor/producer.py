@@ -9,9 +9,16 @@ if check_platform():
     import RPi.GPIO as GPIO
 
 class PirsensorProducerDataProxy(ProducerDataProxy):
+    """
+    For storing shared motion sensor data
+    """
     pass
 
 class PirsensorProducer(Producer):
+    """
+    Class for producing motion sensor sample data
+    """
+    
     NAME = "PirsensorProducer"
     LOGGER = logging.getLogger(NAME)
 

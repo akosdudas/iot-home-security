@@ -6,6 +6,10 @@ import logging
 import time
 
 class PirsensorConsumer(Consumer):
+    """
+    Consumer class for debugging purposes
+    """
+    
     NAME = 'PirsensorConsumer'
     LOGGER = logging.getLogger(NAME)
 

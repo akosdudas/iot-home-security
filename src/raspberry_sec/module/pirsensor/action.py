@@ -3,6 +3,9 @@ from raspberry_sec.interface.action import Action
 import logging
 
 class PirsensorAction(Action):
+    """ 
+    Action class for debugging purposes
+    """
     
     LOGGER = logging.getLogger('PirsensorAction')
     NAME = 'PirsensorAction'
