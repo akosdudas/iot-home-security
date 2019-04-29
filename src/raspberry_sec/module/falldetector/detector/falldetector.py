@@ -9,9 +9,16 @@ from raspberry_sec.module.falldetector.detector.people_detector import HOGDetect
 from raspberry_sec.module.falldetector.detector.fall_event_detector import FallEventDetector
 
 class FallDetector():
+    """
+    Class for detecting fall events in a video stream
+    """
 
     def __init__(self, parameters: dict):
-        
+        """
+        Constructor
+        :param parameters Parameters dictionary of the FallDetector instance 
+        """
+
         self.obj_min_area = parameters['obj_min_area']
         self.obj_max_area = parameters['obj_max_area']
         
@@ -57,6 +64,13 @@ class FallDetector():
         self.mask = None
 
     def process_frame(self, input_frame, timestamp):
+        """
+        Detect human fall in the next frame of the video stream
+        :param input_frame Video frame to be processed
+        :param timestamp The timestamp of the frame in milliseconds
+        :return The list of falls detected in the scene
+        """
+
         # Resize frame to uniform size
         self.frame = imutils.resize(input_frame, width=min(500, input_frame.shape[1]))
         # Background subtraction
@@ -71,14 +85,20 @@ class FallDetector():
 
         for contour in contours:
             obj = ImageObject(0, contour, self.frame, timestamp)
+            # Check if the object's area is within the area limits configured
             if obj.get_area() < self.obj_min_area:
                 continue
             if obj.get_area() > self.obj_max_area:
                 continue
+            # Try to detect human body in the object
             obj.detect_human(self.people_detector)
             objects.append(obj)
+        
+        # Update scene with the objects detected on the frame
         self.scene.update_objects(objects, self.frame, timestamp)
 
+        # Detect fall events in the state history of the objects representing
+        # a human
         falls = []
         human_ids = self.scene.get_human_objects()
         for human in human_ids:
@@ -92,9 +112,11 @@ class FallDetector():
         return falls
 
     def draw(self):
+        """
+        Draw the scene on the current frame of the video stream
+        """
         # If there were no processed frames, drawing is not possible
         if self.frame is None:
             return
         for i, o in self.scene.objects.items():
             o.draw(self.frame)
-
