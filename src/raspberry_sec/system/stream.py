@@ -80,8 +80,12 @@ class Stream(ProcessReady):
 			try:
 				Stream.LOGGER.debug(self.name + ' calling producer')
 				data = self.producer.get_data(data_proxy)
-
-				c_context = ConsumerContext(data, True)
+				timestamp = None
+				try:
+					timestamp = self.producer.get_timestamp(data_proxy)
+				except:
+					pass
+				c_context = ConsumerContext(data, True, _timestamp=timestamp)
 				for consumer in self.consumers:
 					if not c_context.alert:
 						break
