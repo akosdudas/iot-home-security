@@ -60,7 +60,10 @@ def test_falldetector_algo(config, fps, video_file, show_frame=True):
                         break
                     elif command > 47 and command < 58:
                         plotter = StatePlotter()
-                        plotter.plot_states(fd.scene.objects[command - 48].state_history)
+                        plotter.plot_states(
+                            fd.scene.objects[command - 48].state_history,
+                            timestamps=fd.scene.objects[command - 48].timestamps
+                        )
                     command = 255
             k = 255
     
@@ -90,13 +93,28 @@ def test_performance(config, videos_folder, output_folder):
             json.dump(results, f)
 
 if __name__ == '__main__':
-    config_file = os.path.join(os.path.dirname(__file__), 'test_parameters.json')
+    current_folder = os.path.dirname(__file__)
+    config_file = os.path.join(current_folder, 'test_parameters.json')
+
     with open(config_file) as f:
         config = json.load(f)
-    test_falldetector_algo(config, 24, '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/dataset/dataset/chute02/cam8.avi',)
-    if False:
+
+    TEST = 'SINGLE'
+    #TEST = 'PERFORMANCE'
+
+    if TEST == 'SINGLE':
+        scenario = 'chute01'
+        cam = 'cam8'
+        fps = 24
+
+        test_falldetector_algo(
+            config, 
+            fps, 
+            os.path.join(current_folder, 'dataset', scenario, '{}.avi'.format(cam))
+        )
+    elif TEST == 'PERFORMANCE':
         test_performance(
             config, 
-            '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/dataset/dataset',
-            '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/results'
+            os.path.join(current_folder, 'dataset'),
+            os.path.join(current_folder, 'results')
         )
