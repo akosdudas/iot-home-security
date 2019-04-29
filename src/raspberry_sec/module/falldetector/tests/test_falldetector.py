@@ -41,6 +41,7 @@ def test_falldetector_algo(config, fps, video_file, show_frame=True):
             #print(timestamp)
             fd.draw()
             cv2.imshow('frame', fd.frame)
+            cv2.imshow('mask', fd.mask)
 
             k = cv2.waitKey(1) & 0xff
             if k == 27:

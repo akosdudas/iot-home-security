@@ -56,10 +56,6 @@ class FalldetectorConsumer(Consumer):
         if len(falls) > 0:
             context.alert = True
             context._alert_data = "Fall detected"
-        self.fall_detector.draw()
-        cv2.imshow('frame', self.fall_detector.frame)
-        cv2.imshow('mask', self.fall_detector.mask)
-        cv2.waitKey(1)
         
         self.prev_timestamp = timestamp
 
