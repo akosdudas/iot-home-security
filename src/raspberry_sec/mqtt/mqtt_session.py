@@ -1,3 +1,22 @@
+# Created by adapting iot/api-client/mqtt_example/cloudiot_mqtt_example.py
+# in the https://github.com/GoogleCloudPlatform/python-docs-samples
+# repository
+# Commit id #1d4e988
+
+# Copyright 2017 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from types import SimpleNamespace
 import json
 import datetime
@@ -16,12 +35,21 @@ import paho.mqtt.client as mqtt
 from raspberry_sec.system.util import ProcessReady, ProcessContext
 
 class MQTTSession(ProcessReady):
-    
+    """
+    Class for managing and MQTT connection
+    """
+
     NAME = "MQTTSession"
     LOGGER = logging.getLogger('MQTTSession')
     MAXIMUM_BACKOFF_TIME = 32
 
     def __init__(self, config, private_key_file, ca_certs):
+        """
+        Constructor
+        :param config: MQTT Session config
+        :param private_key_file: RSA private key file of the device for creating a jwt
+        :ca_certs: Google's cerfifications for creating a jwt
+        """
         self.config = MQTTSession.parse_config(config)
         self.config.private_key_file = private_key_file
         self.config.ca_certs = ca_certs
@@ -43,6 +71,7 @@ class MQTTSession(ProcessReady):
         return MQTTSession.NAME
 
     def on_connect(on_connect, unused_client, unused_userdata, unused_flags, rc):
+        """Paho callback for when a device connects."""
         MQTTSession.LOGGER.debug('on_connect {}'.format(error_str(rc)))
         self.should_backoff = False
         self.minimum_backoff_time = 1
@@ -55,7 +84,6 @@ class MQTTSession(ProcessReady):
         # Since a disconnect occurred, the next loop iteration will wait with
         # exponential backoff.
         self.should_backoff = True
-
         self.connected = False
     
     def on_publish(self, unused_client, unused_userdata, unused_mid):
@@ -80,12 +108,17 @@ class MQTTSession(ProcessReady):
             self.command_queue.put(command, block=False)
 
     def publish_message(self, topic_name, payload, qos=0):
+        """
+        Publish an mqtt message to the topic specified with the specified qos value
+        """
         device_topic = '/devices/{}/{}'.format(self.config.device_id, topic_name)
         MQTTSession.LOGGER.debug("Publishing to topic {}".format(device_topic))
         self.client.publish(device_topic, payload=payload, qos=qos)
 
     def get_client(self):
-        
+        """
+        Tries to connect to the mqtt server with the credentials of the device
+        """
         client_id = 'projects/{}/locations/{}/registries/{}/devices/{}'.format(
             self.config.project_id, self.config.cloud_region, 
             self.config.registry_id, self.config.device_id
@@ -134,9 +167,11 @@ class MQTTSession(ProcessReady):
         self.client.subscribe(mqtt_command_topic, qos=0)
 
     def run_client_loop(self):
-        '''
-            Returns false if the client should give up connecting
-        '''
+        """
+        Run the mqtt client loop to send and receive messages. Try to reconnect or
+        refresh jwt if necessary.
+        :return: False if the client should give up connecting, True otherwise
+        """
         jwt_exp_mins = self.config.jwt_expires_minutes
         
         # Process network events.
@@ -165,6 +200,9 @@ class MQTTSession(ProcessReady):
         return True
 
     def publish_alert(self):
+        """
+        Publish alert message
+        """
         try:
             alert_message = self.alert_queue.get(block=False)
             MQTTSession.LOGGER.info("Publishing alert - {}".format(str(alert_message)[:80]))
@@ -174,6 +212,9 @@ class MQTTSession(ProcessReady):
             pass
 
     def publish_state(self):
+        """
+        Publish device status
+        """
         try:
             state_message = self.state_queue.get(block=False)
             MQTTSession.LOGGER.info("Publishing state - {}".format(str(state_message)[:80]))
