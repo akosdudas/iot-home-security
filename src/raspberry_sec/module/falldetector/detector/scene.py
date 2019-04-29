@@ -3,19 +3,39 @@ from raspberry_sec.module.falldetector.detector.object_tracker import ImageObjec
 import operator
 
 class Scene():
+    """
+    Class representing a scene of a video stream. Capable of tracking the objects
+    present in the video stream,
+    """
     i = 0
 
     def __init__(self, object_expiration_time):
+        """
+        Construnctor
+        :param object_expiration_time: The number of frames an object in the video
+                stream is allowed to be undetected before deleting it from the 
+                scene
+        """
         self.object_expiration_time = object_expiration_time
         self.objects = {}
 
     @staticmethod
     def get_id():
+        """
+        Generate a unique id for the objects in the stream
+        """
         i = Scene.i
         Scene.i += 1
         return i
 
     def update_objects(self, detected_objects: list, frame, timestamp):
+        """
+        Update the objects of the Scene based on the objects detected in the latest
+        frame
+        :param detected_objects: List of ImageObjects detected in the latest frame
+        :param frame: The latest frame of the video stream
+        :param timestamp: The timestamp of the frame
+        """
         detected_objects_copy = detected_objects.copy()
         # Increase the age of all historical objects in the scene
         for i, obj in self.objects.items():
@@ -100,6 +120,10 @@ class Scene():
             unhandled_object.update_state(unhandled_object)
 
     def get_human_objects(self):
+        """
+        Get all objects of the Scene that contain a human figure
+        :return: The list of ImageObjects containing a human figure
+        """
         human_ids = []
         for i, obj in self.objects.items():
             if obj.type == ObjectType.HUMAN:
