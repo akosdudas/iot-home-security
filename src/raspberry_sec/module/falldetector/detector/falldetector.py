@@ -16,7 +16,7 @@ class FallDetector():
     def __init__(self, parameters: dict):
         """
         Constructor
-        :param parameters Parameters dictionary of the FallDetector instance 
+        :param parameters: Parameters dictionary of the FallDetector instance 
         """
 
         self.obj_min_area = parameters['obj_min_area']
@@ -66,9 +66,9 @@ class FallDetector():
     def process_frame(self, input_frame, timestamp):
         """
         Detect human fall in the next frame of the video stream
-        :param input_frame Video frame to be processed
-        :param timestamp The timestamp of the frame in milliseconds
-        :return The list of falls detected in the scene
+        :param input_frame: Video frame to be processed
+        :param timestamp: The timestamp of the frame in milliseconds
+        :return: The list of falls detected in the scene
         """
 
         # Resize frame to uniform size

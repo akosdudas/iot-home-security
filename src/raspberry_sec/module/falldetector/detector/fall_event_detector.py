@@ -4,11 +4,11 @@ from raspberry_sec.module.falldetector.detector.object_tracker import ImageObjec
 class FallEventDetector:
     """
     Class for detecting fall events in an ImageObject state history
-    :param stabilize_interval_ms The time interval in which the objects state
+    :param stabilize_interval_ms: The time interval in which the objects state
             variables has to stay stable for the object to be considered stabilized
-    :param fall_interval_ms The time interval before the state variables has 
+    :param fall_interval_ms: The time interval before the state variables has 
             stabilized in which the state history is examined for a fall event
-    :param tolerance The tolerance of the standard deviations of the state variables
+    :param tolerance: The tolerance of the standard deviations of the state variables
             when examining of they are stabilized
     """
     def __init__(self, stabilize_interval_ms, fall_interval_ms, tolerance: dict):
@@ -19,8 +19,8 @@ class FallEventDetector:
     def detect_fall_event(self, obj: ImageObject):
         """
         Detect a fall event in an image object state history
-        :param obj ImageObject
-        :return (bool, time_ms) bool is True if a fall has been detected,
+        :param obj: ImageObject
+        :return: (bool, time_ms) bool is True if a fall has been detected,
                 False otherwise. time_ms is the timestamp of the fall if 
                 a fall has occurred, None otherwise
         """
@@ -42,8 +42,8 @@ class FallEventDetector:
     def is_final_position_lying(obj: ImageObject):
         """
         Determine if the final position of the object is LYING
-        :param obj ImageObject
-        :return True if LYING, False otherwise
+        :param obj: ImageObject
+        :return: True if LYING, False otherwise
         """
         if obj.get_pose() == "LYING":
             return True
@@ -54,9 +54,9 @@ class FallEventDetector:
     def get_interval_start_index(obj: ImageObject, time_interval_ms):
         """
         Get the starting index of a given time interval in the object state history list
-        :param obj ImageObject
-        :param time_interval_ms Time interval in milliseconds
-        :return The starting index of the time interval in the object state history list
+        :param obj: ImageObject
+        :param time_interval_ms: Time interval in milliseconds
+        :return: The starting index of the time interval in the object state history list
         """
         interval_end = obj.timestamps[-1]
 
@@ -69,8 +69,8 @@ class FallEventDetector:
     def has_pose_stabilized(self, obj: ImageObject):
         """
         Determine if the state of an ImageObject has stabilized
-        :param obj ImageObject
-        :return True if stabilized, False otherwise
+        :param obj: ImageObject
+        :return: True if stabilized, False otherwise
         """
         time_interval_ms = self.stabilize_interval_ms
         tolerance = self.tolerance
@@ -109,12 +109,13 @@ class FallEventDetector:
     def has_state_variable_stabilized(obj: ImageObject, state_var_name, interval_start_index, tolerance):
         """
         Determine if a single state variable of an ImageObject has stabilized
-        :param obj ImageObject
-        :param state_var_name The name of the state variable examined
-        :param interval_start_index The starting index of the time interval in which
+        :param obj: ImageObject
+        :param state_var_name: The name of the state variable examined
+        :param interval_start_index: The starting index of the time interval in which
                 the state variable is examined
-        :param tolerance The tolerance value of the std deviation of the state variable
+        :param tolerance: The tolerance value of the std deviation of the state variable
                 in the given time interval
+        :return: True if the state variable has stabilized, False otherwise
         """
         # Calculate standard deviations of the state variables 
         # in the given interval
@@ -134,8 +135,8 @@ class FallEventDetector:
     def has_fall_occured(self, obj: ImageObject):
         """
         Detect fall event in the state history of an image object
-        :param obj ImageObject
-        :return (bool, time_ms) bool is True if a fall has been detected,
+        :param obj: ImageObject
+        :return: (bool, time_ms) bool is True if a fall has been detected,
                 False otherwise. time_ms is the timestamp of the fall if 
                 a fall has occurred, None otherwise
         """

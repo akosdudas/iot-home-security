@@ -2,6 +2,11 @@
 import cv2
 
 class BS:
+    """
+    Parent class of background subtractor algorithms
+    :param bs: Backgroundsubtractor to be applied.
+    :param params: The parameters of the background subtraction
+    """
     def __init__(self, bs, params):
         self.bs = bs
         self.fgmask = None
@@ -14,6 +19,12 @@ class BS:
         self.erode_iterations = params['erode_iterations']
 
     def get_mask(self, frame):
+        """
+        Get the foreground mask of a video frame by applying the background
+        subtraction algorithm
+        :param frame: Video frame
+        :return: The foreground mask of the frame
+        """
         if self.fgmask is None:
             self.fgmask = self.bs.apply(frame, self.fgmask, self.learnrate_initial)
         else:
@@ -21,6 +32,10 @@ class BS:
         return self.fgmask
 
     def denoise_mask(self):
+        """
+        Remove noise from the foreground mask of a frame
+        :return: The denoise foreground mask
+        """
         fgmask = self.fgmask.copy()        
         thresh = cv2.morphologyEx(
             fgmask, 
@@ -48,16 +63,40 @@ class BS:
         return thresh
 
 class GSOC(BS):
+    """
+    Google Summer of Code background subtractor class
+    """
+
     def __init__(self, params):
+        """
+        Constuctor
+        :param params: The parameters of the background subtraction algorithm.
+        """
         fgbg = cv2.bgsegm.createBackgroundSubtractorGSOC()
         super().__init__(fgbg, params)
 
 class MOG2(BS):
+    """
+    MOG2 background subtractor class
+    """
+
     def __init__(self, params):
+        """
+        Constuctor
+        :param params: The parameters of the background subtraction algorithm.
+        """
         fgbg = cv2.createBackgroundSubtractorMOG2(500, 16, 0)
         super().__init__(fgbg, params)
 
 class CNT(BS):
+    """
+    CNT background subtractor class
+    """
+
     def __init__(self, params):
+        """
+        Constuctor
+        :param params: The parameters of the background subtraction algorithm.
+        """
         fgbg = cv2.bgsegm.createBackgroundSubtractorCNT()#15, True, 15*60, False)
         super().__init__(fgbg, params)
