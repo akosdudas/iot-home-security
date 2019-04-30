@@ -2,7 +2,7 @@ import os
 import json
 import csv
 
-def generate_summary(results_folder, ground_truth_file, output_file):
+def generate_summary(results_folder, ground_truth_file, output_file, format='detailed', skiplast2=False):
     gt = None
     with open(labels) as f:
         gt = json.load(f)
@@ -22,7 +22,35 @@ def generate_summary(results_folder, ground_truth_file, output_file):
             })
         except:
             pass
+
+    if format == 'detailed':
+        write_results_summary(output_file, results)
+    elif format == 'byfps':
+        write_results_by_fps(output_file, results, skiplast2)
+
+def write_results_by_fps(output_file, results, skiplast2):
+    fps_keys = [ fps for fps in results[0]['results']['results'].keys() ]
+    fps_results = {}
+    for fps in fps_keys:
+        fps_results[fps] = { 'tp': 0, 'fp': 0, 'fn': 0 }
+    for scenario in results:
+        if skiplast2:
+            if scenario['name'] == 'chute23' or scenario['name'] == 'chute24':
+                continue
+        res = scenario['results']['results']
+        for fps in res.keys():
+            fps_results[fps]['tp'] += res[fps]['true_positive']
+            fps_results[fps]['fp'] += res[fps]['false_positive']
+            fps_results[fps]['fn'] += res[fps]['false_negative']
     
+    with open(output_file, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+
+        writer.writerow(['FPS', 'TP', 'FP', 'FN'])
+        for fps in fps_results.keys():
+            writer.writerow([fps, fps_results[fps]['tp'], fps_results[fps]['fp'], fps_results[fps]['fn']])
+    
+def write_results_summary(output_file, results):
     with open(output_file, 'w') as csv_file:
         writer = csv.writer(csv_file)
         
@@ -118,5 +146,9 @@ def get_stats(falls, gt):
 if __name__ == "__main__":
     labels = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/ground_truth/labels.json'
     results_dir = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/results'
-    output_file = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/summary.csv'
-    generate_summary(results_dir, labels, output_file)
+    output_file_summary = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/summary.csv'
+    output_file_by_fps = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/summary_per_fps.csv'
+    output_file_by_fps_wo_23_24 = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/tests/summary_per_fps_wo_23_24.csv'
+    generate_summary(results_dir, labels, output_file, format='detailed', skiplast2=False)
+    generate_summary(results_dir, labels, output_file_by_fps, format='byfps', skiplast2=False)
+    generate_summary(results_dir, labels, output_file_by_fps_wo_23_24, format='byfps', skiplast2=True)
