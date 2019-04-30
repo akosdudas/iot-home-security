@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from raspberry_sec.module.falldetector.detector.state_predictor import State
+from raspberry_sec.module.falldetector.detector.object_tracker import ImageObject
 
 class StatePlotter:
     """ 
@@ -38,7 +39,10 @@ class StatePlotter:
         self.x.plot(x_axis, [state.x for state in states], color=color, linewidth=1)
         self.y.plot(x_axis, [state.y for state in states], color=color, linewidth=1)
         self.h2w.plot(x_axis, [state.h / state.w for state in states], color=color, linewidth=1)
+        self.h2w.plot(x_axis, [ImageObject.STANDING_THRESHOLD for state in states], color='red', linewidth=1, linestyle='dashed')
+        self.h2w.plot(x_axis, [ImageObject.LYING_THRESHOLD for state in states], color='green', linewidth=1, linestyle='dashed')
         self.angle.plot(x_axis, [state.angle for state in states], color=color, linewidth=1)
+        self.angle.plot(x_axis, [ImageObject.LYING_THRESHOLD_ANGLE for state in states], color='red', linewidth=1, linestyle='dashed')
         plt.pause(0.001)
 
     def dismiss(self):
