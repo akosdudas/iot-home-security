@@ -5,6 +5,7 @@ from raspberry_sec.system.hw_util import is_gpio_floating, check_platform
 
 import time
 
+# Only include the RPi.GPIO package if the SW is running on a RPi
 if check_platform():
     import RPi.GPIO as GPIO
 

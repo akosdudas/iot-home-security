@@ -8,6 +8,7 @@ class ConsumerContext:
 		:param _data: sample data the consumers work on
 		:param _alert: True or False
 		:param _alert_data: data to be reported in case of an alert
+		:param _timestamp: the timestamp of the _data field
 		"""
 		self.data = _data
 		self.alert = _alert
