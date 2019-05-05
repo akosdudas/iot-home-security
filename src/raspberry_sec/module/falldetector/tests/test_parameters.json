@@ -1,0 +1,42 @@
+{
+    "timeout": 0.1,
+    "obj_min_area": 1000,
+    "obj_max_area": 50000,
+    "obj_expiration": 5,
+    "obj_state_history_max_len": 500,
+    "obj_padding": 30,
+    "obj_match_area_threshold": 2,
+    "resize_width": 500,
+    "pose_ratios": {
+        "standing_threshold": 1.5,
+        "lying_threshold": 0.5,
+        "lying_threshold_angle": 0.78539
+    },
+    "background_subtractor_algo": "CNT",
+    "background_subtractor_parameters": {
+        "learnrate": -1,
+        "learnrate_initial": -1,
+        "morph_open_ellipse_size": 5,
+        "dilate_ellipse_size": 7,
+        "dilate_iterations": 1,
+        "erode_ellipse_size": 3,
+        "erode_iterations": 2
+    },
+    "people_detector_algo": "HOG",
+    "people_detector_parameters": {
+        "win_stride_x": 4,
+        "win_stride_y": 4,
+        "padding_x": 0,
+        "padding_y": 0,
+        "scale": 1.05
+    },
+    "fall_event_detector_parameters": {
+        "fall_interval_ms": 1000,
+        "stabilized_interval_ms": 1000,
+        "stabilized_tolerance": {
+            "pos": 20,
+            "size": 20,
+            "angle": 0.1
+        }
+    }
+}

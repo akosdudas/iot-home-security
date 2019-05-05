@@ -3,21 +3,39 @@ from raspberry_sec.module.falldetector.detector.object_tracker import ImageObjec
 import operator
 
 class Scene():
+    """
+    Class representing a scene of a video stream. Capable of tracking the objects
+    present in the video stream,
+    """
     i = 0
 
-    DIST_ALLOWED_SQ = 500
-    UNSEEN_ALLOWED = 5
-
-    def __init__(self):
+    def __init__(self, object_expiration_time):
+        """
+        Construnctor
+        :param object_expiration_time: The number of frames an object in the video
+                stream is allowed to be undetected before deleting it from the 
+                scene
+        """
+        self.object_expiration_time = object_expiration_time
         self.objects = {}
 
     @staticmethod
     def get_id():
+        """
+        Generate a unique id for the objects in the stream
+        """
         i = Scene.i
         Scene.i += 1
         return i
 
     def update_objects(self, detected_objects: list, frame, timestamp):
+        """
+        Update the objects of the Scene based on the objects detected in the latest
+        frame
+        :param detected_objects: List of ImageObjects detected in the latest frame
+        :param frame: The latest frame of the video stream
+        :param timestamp: The timestamp of the frame
+        """
         detected_objects_copy = detected_objects.copy()
         # Increase the age of all historical objects in the scene
         for i, obj in self.objects.items():
@@ -29,27 +47,43 @@ class Scene():
             candidates = obj.find_match_candidates(detected_objects_copy)
             # Some candidates were found for the object
             for c in candidates:
-                match_canditates.append({'id': obj.id, 'mc_obj': c['mc_obj'], 'dist_sq': c['dist_sq']})
-        
+                match_canditates.append({
+                    'id': obj.id, 
+                    'mc_obj': c['mc_obj'], 
+                    'dist_sq': c['dist_sq']
+                })
+        # Process match candidates ordered by their distance in a decreasing order
         match_canditates = sorted(match_canditates, key=lambda k: k['dist_sq'])
         while True:
-            
             mc = None
             if not match_canditates:
                 break
             else:
                 mc = match_canditates[0]
 
+            # Update historic object based on the closest match candidate not 
+            # processed yet
             self.objects[mc['id']].update_state(mc['mc_obj'])
+            # Remove processed detected object
             try:
                 detected_objects_copy.remove(mc['mc_obj'])
             except:
                 pass
-            match_canditates[:] = [m for m in match_canditates if not m['id'] == mc['id']]
-            match_canditates[:] = [m for m in match_canditates if not m['mc_obj'] == mc['mc_obj']]
+            # Remove processed elements from the list of match candidates
+            match_canditates[:] = [
+                m for m in match_canditates if not m['id'] == mc['id']
+            ]
+            match_canditates[:] = [
+                m for m in match_canditates if not m['mc_obj'] == mc['mc_obj']
+            ]
 
-
-        for unhandled_object in [self.objects[obj_id] for obj_id in self.objects.keys() if self.objects[obj_id].unseen > 0]:
+        # Try to find matches for unhandled historic objects that split for some reason
+        # by merging detected objects
+        unhandled_objects = [
+            self.objects[obj_id] for obj_id in 
+                self.objects.keys() if self.objects[obj_id].unseen > 0
+        ]
+        for unhandled_object in unhandled_objects:
             # Get all new object detected contained by the projected state of the historic object
             contained_objects = []
             for detected in detected_objects_copy:
@@ -71,19 +105,25 @@ class Scene():
         # Delete expired objects
         expired_list = []
         for i, obj in self.objects.items():
-            if(obj.unseen > Scene.UNSEEN_ALLOWED):
+            if(obj.unseen > self.object_expiration_time):
                 expired_list.append(i)
-
-        #TODO predict states for unmatched non-expired historical object based on past states
-        # aka step Kalman-filter by 1
-        for unhandled_object in [self.objects[obj_id] for obj_id in self.objects.keys() if self.objects[obj_id].unseen > 0]:
-            unhandled_object.timestamps.append(timestamp)
-            unhandled_object.update_state(unhandled_object)
-
         for i in expired_list:    
             del self.objects[i]
 
+        # Predict the state of remaining objects for the next frame
+        unhandled_objects = [
+            self.objects[obj_id] for obj_id in 
+                self.objects.keys() if self.objects[obj_id].unseen > 0
+        ]
+        for unhandled_object in unhandled_objects:
+            unhandled_object.timestamps.append(timestamp)
+            unhandled_object.update_state(unhandled_object)
+
     def get_human_objects(self):
+        """
+        Get all objects of the Scene that contain a human figure
+        :return: The list of ImageObjects containing a human figure
+        """
         human_ids = []
         for i, obj in self.objects.items():
             if obj.type == ObjectType.HUMAN:

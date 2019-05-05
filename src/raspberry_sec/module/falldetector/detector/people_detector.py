@@ -11,15 +11,26 @@ class PeopleDetector:
 
 class HOGDetector(PeopleDetector):
 
-    def __init__(self):
+    def __init__(self, params):
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+
+        self.win_stride_x = params["win_stride_x"]
+        self.win_stride_y = params["win_stride_y"]
+        self.padding_x = params["padding_x"]
+        self.padding_y = params["padding_y"]
+        self.scale = params["scale"]
 
     def detect_human(self, roi):
         roi = imutils.resize(roi, width=max(64, min(100, roi.shape[1])))
         roi = imutils.resize(roi, height=max(128, roi.shape[0]))
 
-        rects, weights = self.hog.detectMultiScale(roi, winStride=(4, 4), padding=(0, 0), scale = 1.05)
+        rects, weights = self.hog.detectMultiScale(
+            roi, 
+            winStride=(self.win_stride_x, self.win_stride_y), 
+            padding=(self.padding_x, self.padding_y), 
+            scale = self.scale
+        )
 
         if not len(rects) > 0:
             return (False, )
@@ -27,21 +38,19 @@ class HOGDetector(PeopleDetector):
             return (True, )
 
 class MobileNetSSD(PeopleDetector):
-
+    """
+    MobileNetSSD neural network for detecting human objects in video frames
+    You can find the prototxt and caffe model files of an example network 
+    under src/raspberry_sec/module/falldetector/mobilenet_ssd/
+    """
     CLASSES = ( 'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 
                 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 
                 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor')
 
     COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
-
-    PROTOTXT = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/mobilenet_ssd/MobileNetSSD_deploy.prototxt'
-    CAFFE_MODEL = '/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/mobilenet_ssd/MobileNetSSD_deploy.caffemodel'
-
     CONFIDENCE_LIMIT = 0.5
 
     def __init__(self, prototxt = None, caffe_model = None):
-        prototxt = MobileNetSSD.PROTOTXT
-        caffe_model = MobileNetSSD.CAFFE_MODEL
         self.net = cv2.dnn.readNetFromCaffe(prototxt, caffe_model)
         self.detections = None
 
@@ -67,18 +76,3 @@ class MobileNetSSD(PeopleDetector):
         else:
             return (False, self.detections)
         
-
-
-if __name__ == '__main__':
-    cap = cv2.VideoCapture('/home/nagybalint/code/iot-home-security/src/raspberry_sec/module/falldetector/chute02/cam8.avi')
-    net = MobileNetSSD()
-    while True:
-        ret, frame_orig = cap.read()
-        if not ret:
-            break
-        net.detect_human(frame_orig)
-        cv2.imshow('fr', frame_orig)
-        k = cv2.waitKey(1) & 0xff
-        if k == 27:
-            break
-    pass
