@@ -157,7 +157,7 @@ class MQTTSession(ProcessReady):
         self.client.on_message = self.on_message
 
         # Connect to the Google MQTT bridge.
-        self.client.connect(self.config.mqtt_bridge_hostname, self.config.mqtt_bridge_port, keepalive=self.config.keep_alive minutes*60)
+        self.client.connect(self.config.mqtt_bridge_hostname, self.config.mqtt_bridge_port, keepalive=self.config.keep_alive_minutes*60)
 
         # The topic that the device will receive commands on.
         mqtt_command_topic = '/devices/{}/commands/#'.format(self.config.device_id)

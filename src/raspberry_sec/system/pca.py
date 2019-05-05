@@ -205,6 +205,9 @@ class PCASystem(ProcessReady):
 		Creates the mqtt session and fires it up. 
 		:param: context: holds the 'stop event' and the logging queue
 		"""
+		if self.mqtt_session is None:
+			PCASystem.LOGGER.info('MQTT Session not configured')
+			return
 		mqtt_context = ProcessContext(
 			stop_event=context.stop_event,
 			log_queue=context.logging_queue
