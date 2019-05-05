@@ -1,0 +1,67 @@
+{
+    "__type__": "PCASystem",
+    "stream_controller": {
+        "__type__": "StreamController",
+        "action": {
+            "__type__": "EmailAction",
+            "parameters": {
+                "from_addr": "[RPI_MAIL]@gmail.com",
+                "password": "",
+                "smtp_addr": "smtp.gmail.com:587",
+                "subject": "RaspberryPi ALERT",
+                "to_addr": "[YOUR_MAIL]@gmail.com",
+                "user": "[RPI_MAIL]"
+            }
+        },
+        "msg_limit": "100",
+        "polling_interval": "3",
+        "query": "@PIR@ OR @CAM@"
+    },
+    "streams": [
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "PirsensorConsumer",
+                    "parameters": {
+                        "timeout": 1
+                    }
+                }
+            ],
+            "name": "PIR",
+            "producer": {
+                "__type__": "PirsensorProducer",
+                "parameters": {
+                    "GPIO_PIR": 7,
+                    "wait_interval": 1
+                }
+            }
+        },
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "MotiondetectorConsumer",
+                    "parameters": {
+                        "area_threshold": 250,
+                        "dilate_iteration": 2,
+                        "resize_height": 360,
+                        "resize_width": 640,
+                        "threshold": 25,
+                        "threshold_max_val": 255,
+                        "timeout": 1
+                    }
+                }
+            ],
+            "name": "CAM",
+            "producer": {
+                "__type__": "CameraProducer",
+                "parameters": {
+                    "device": 0,
+                    "unsuccessful_limit": 50,
+                    "wait_key_interval": 1
+                }
+            }
+        }
+    ]
+}

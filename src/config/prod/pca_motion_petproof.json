@@ -3,9 +3,14 @@
     "stream_controller": {
         "__type__": "StreamController",
         "action": {
-            "__type__": "PirsensorAction",
+            "__type__": "EmailAction",
             "parameters": {
-                "dummy": "dummy"
+                "from_addr": "[RPI_MAIL]@gmail.com",
+                "password": "",
+                "smtp_addr": "smtp.gmail.com:587",
+                "subject": "RaspberryPi ALERT",
+                "to_addr": "[YOUR_MAIL]@gmail.com",
+                "user": "[RPI_MAIL]"
             }
         },
         "msg_limit": "100",
