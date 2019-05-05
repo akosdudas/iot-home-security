@@ -263,10 +263,10 @@ class ImageObject:
         :param frame: Video frame
         """
         if self.type == ObjectType.HUMAN:
-            obj_text = f"{self.id} HUMAN - {self.get_pose()}"
+            obj_text = "{} HUMAN - {}".format(self.id, self.get_pose())
             color = (0,0,255)
         else:
-            obj_text = f"{self.id} OBJECT"
+            obj_text = "{} OBJECT".format(self.id)
             color = (255,0,0)
         (x,y,u,v) = self.get_rect()
         cv2.putText(frame, obj_text, (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.5 ,color,1,cv2.LINE_AA)
