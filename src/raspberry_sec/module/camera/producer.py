@@ -41,6 +41,9 @@ class CameraProducer(Producer):
 			unsuccessful_images = 0
 			data_proxy = context.get_prop('shared_data_proxy')
 
+			# Set initial data
+			data_proxy.set_data((None, None))
+
 			while not context.stop_event.is_set():
 				ret_val, img = cam.read()
 				if ret_val:

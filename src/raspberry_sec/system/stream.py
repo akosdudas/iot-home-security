@@ -74,17 +74,18 @@ class Stream(ProcessReady):
 		# for inter-process communication
 		data_proxy = context.get_prop('shared_data_proxy')
 		sc_queue = context.get_prop('sc_queue')
-
 		# stream main loop
 		while True:
+			Stream.LOGGER.debug(self.name + ' calling producer')
+			timestamp = None
 			try:
-				Stream.LOGGER.debug(self.name + ' calling producer')
+				timestamp = self.producer.get_timestamp(data_proxy)
+			except:
+				pass
+
+			try:
 				data = self.producer.get_data(data_proxy)
-				timestamp = None
-				try:
-					timestamp = self.producer.get_timestamp(data_proxy)
-				except:
-					pass
+				
 				c_context = ConsumerContext(data, True, _timestamp=timestamp)
 				for consumer in self.consumers:
 					if not c_context.alert:
