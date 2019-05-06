@@ -29,20 +29,23 @@ class CameraProducer(Producer):
 		ProducerDataManager.register('CameraProducerDataProxy', CameraProducerDataProxy)
 
 	def create_shared_data_proxy(self, manager: ProducerDataManager):
-		return manager.CameraProducerDataProxy()
+		data_proxy = manager.CameraProducerDataProxy()
+		data_proxy.set_data((None, None))
+		return data_proxy
 
 	def run(self, context: ProcessContext):
 		try:
+			data_proxy = context.get_prop('shared_data_proxy')
+
+			# Set initial data
+			data_proxy.set_data((None, None))
+
 			cam = cv2.VideoCapture(self.parameters['device'])
 			if not cam.isOpened():
 				CameraProducer.LOGGER.error('Cannot capture device: ' + str(self.parameters['device']))
 				return
 
 			unsuccessful_images = 0
-			data_proxy = context.get_prop('shared_data_proxy')
-
-			# Set initial data
-			data_proxy.set_data((None, None))
 
 			while not context.stop_event.is_set():
 				ret_val, img = cam.read()
