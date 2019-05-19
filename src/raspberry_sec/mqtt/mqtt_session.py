@@ -160,7 +160,7 @@ class MQTTSession(ProcessReady):
 
         # Subscribe to the commands topic, QoS 1 enables message acknowledgement.
         MQTTSession.LOGGER.info('Subscribing to {}'.format(mqtt_command_topic))
-        self.client.subscribe(mqtt_command_topic, qos=1)
+        self.client.subscribe(mqtt_command_topic, qos=0)
 
     def run_client_loop(self):
         """
