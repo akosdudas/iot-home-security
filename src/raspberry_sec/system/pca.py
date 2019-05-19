@@ -260,7 +260,7 @@ class PCASystem(ProcessReady):
 		for p in self.producer_set:
 			if p.get_name() == 'CameraProducer':
 				proxy = self.prod_to_proxy[p]
-				camera_image = proxy.get_data()
+				camera_image = p.get_data(proxy)
 				if camera_image is None:
 					PCASystem.LOGGER.warning('Camera Image is None')
 				else:

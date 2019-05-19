@@ -190,7 +190,7 @@ class MQTTSession(ProcessReady):
 
         seconds_since_issue = (datetime.datetime.utcnow() - self.jwt_iat).seconds
         if seconds_since_issue > 60 * jwt_exp_mins:
-            MQTTSession.LOGGER.debug('Refreshing token after {}s').format(seconds_since_issue)
+            MQTTSession.LOGGER.debug('Refreshing token after {}s'.format(seconds_since_issue))
             self.get_client()
 
         return True
