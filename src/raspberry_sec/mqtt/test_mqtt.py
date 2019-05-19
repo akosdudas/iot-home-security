@@ -16,7 +16,7 @@ def test_integration():
 
     # Load PCA System
     config_dir = get_config_dir()
-    config_file = os.path.abspath(os.path.join(config_dir, 'test', 'mqtt_integration_test.json'))
+    config_file = os.path.abspath(os.path.join(config_dir, 'test', 'mqtt_integration_cam_test.json'))
     pca_runtime = PCARuntime(log_runtime.log_queue, PCARuntime.load_pca(config_file))
 
     pca_runtime.start()
