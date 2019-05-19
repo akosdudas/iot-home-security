@@ -97,14 +97,10 @@ class MQTTSession(ProcessReady):
         MQTTSession.LOGGER.debug('Received message \'{}\' on topic \'{}\' with Qos {}'.format(
                 payload, message.topic, str(message.qos)))
         
-        MQTTSession.LOGGER.debug(payload)
         topic_name = message.topic.split('/')[-1]
-        MQTTSession.LOGGER.debug(topic_name)
         command = message.payload.decode('ascii')
-        MQTTSession.LOGGER.debug(command)
 
         if topic_name == 'commands':
-            MQTTSession.LOGGER.debug('State update command received')
             self.command_queue.put(command, block=False)
 
     def publish_message(self, topic_name, payload, qos=0):
@@ -164,7 +160,7 @@ class MQTTSession(ProcessReady):
 
         # Subscribe to the commands topic, QoS 1 enables message acknowledgement.
         MQTTSession.LOGGER.info('Subscribing to {}'.format(mqtt_command_topic))
-        self.client.subscribe(mqtt_command_topic, qos=0)
+        self.client.subscribe(mqtt_command_topic, qos=1)
 
     def run_client_loop(self):
         """
@@ -206,7 +202,7 @@ class MQTTSession(ProcessReady):
         try:
             alert_message = self.alert_queue.get(block=False)
             MQTTSession.LOGGER.info("Publishing alert - {}".format(str(alert_message)[:80]))
-            self.publish_message('events', str(alert_message))
+            self.publish_message('events', str(alert_message), qos=1)
         except QueueEmpty as e:
             MQTTSession.LOGGER.info("Alert Queue empty - passing")
             pass
@@ -268,8 +264,6 @@ def create_jwt(project_id, private_key_file, algorithm, expires_minutes):
     # Read the private key file.
     with open(private_key_file, 'r') as f:
         private_key = f.read()
-
-    print('Creating JWT using {} from private key file {}'.format(algorithm, private_key_file))
 
     return jwt.encode(token, private_key, algorithm=algorithm)
 

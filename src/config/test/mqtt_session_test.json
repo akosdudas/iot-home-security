@@ -1,0 +1,16 @@
+{
+    "mqtt_session": {
+        "session_config": {
+            "project_id": "iot-home-security-d018f",
+            "cloud_region": "us-central1",
+            "registry_id": "my-registry",
+            "device_id": "session-test",
+            "algorithm": "RS256",
+            "mqtt_bridge_hostname": "mqtt.googleapis.com",
+            "mqtt_bridge_port": 8883,
+            "jwt_expires_minutes": 20,
+            "keep_alive_minutes": 1,
+            "verification_code": "test_code"
+        }
+    }
+}

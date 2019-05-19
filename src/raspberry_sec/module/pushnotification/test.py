@@ -26,12 +26,12 @@ def integration_test():
     log_runtime.start()
 
     config_folder = get_config_dir()
-    config_file = os.path.join(config_folder, 'test', 'mqtt_standalone_test.json')
+    config_file = os.path.join(config_folder, 'test', 'mqtt_session_test.json')
     with open(config_file) as f:
         config = json.load(f)
 
     mqtt_session = MQTTSession(
-        config=config,
+        config=config["mqtt_session"]["session_config"],
         private_key_file=os.path.join(get_mqtt_keys_dir(), 'rsa_private.pem'), 
         ca_certs=os.path.join(get_mqtt_keys_dir(), 'roots.pem')
     )
