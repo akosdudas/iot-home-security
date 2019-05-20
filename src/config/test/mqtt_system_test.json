@@ -1,0 +1,91 @@
+{
+    "__type__": "PCASystem",
+    "connect_mqtt": true,
+    "mqtt_session": {
+        "__type__": "MQTTSession",
+        "session_config": {
+            "project_id": "iot-home-security-d018f",
+            "cloud_region": "us-central1",
+            "registry_id": "my-registry",
+            "device_id": "raspberry",
+            "algorithm": "RS256",
+            "mqtt_bridge_hostname": "mqtt.googleapis.com",
+            "mqtt_bridge_port": 8883,
+            "jwt_expires_minutes": 20,
+            "keep_alive_minutes": 1,
+            "verification_code": "test_code"
+        }
+    },
+    "stream_controller": {
+        "__type__": "StreamController",
+        "action": {
+            "__type__": "PushnotificationAction",
+            "parameters": {
+                "dummy": "dummy"
+            }
+        },
+        "msg_limit": "100",
+        "polling_interval": "3",
+        "query": "@STREAM1@ and @STREAM2@"
+    },
+    "streams": [
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "MotiondetectorConsumer",
+                    "parameters": {
+                        "area_threshold": 250,
+                        "dilate_iteration": 2,
+                        "resize_height": 360,
+                        "resize_width": 640,
+                        "threshold": 25,
+                        "threshold_max_val": 255,
+                        "timeout": 1
+                    }
+                },
+                {
+                    "__type__": "BodydetectorConsumer",
+                    "parameters": {
+                        "padding_x": 8,
+                        "padding_y": 8,
+                        "resize_height": 240,
+                        "resize_width": 320,
+                        "scale": 1.15,
+                        "timeout": 1,
+                        "win_stride_x": 4,
+                        "win_stride_y": 4
+                    }
+                }
+            ],
+            "name": "STREAM1",
+            "producer": {
+                "__type__": "CameraProducer",
+                "parameters": {
+                    "device": 0,
+                    "unsuccessful_limit": 50,
+                    "wait_key_interval": 250
+                }
+            }
+        },
+        {
+            "__type__": "Stream",
+            "consumers": [
+                {
+                    "__type__": "PirsensorConsumer",
+                    "parameters": {
+                        "timeout": 1
+                    }
+                }
+            ],
+            "name": "STREAM2",
+            "producer": {
+                "__type__": "PirsensorProducer",
+                "parameters": {
+                    "GPIO_PIR": 7,
+                    "wait_interval": 1
+                }
+            }
+        }
+    ]
+}
