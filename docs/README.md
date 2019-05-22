@@ -2,13 +2,15 @@
 
 Készítette: Török Máté
 
+Módosította és kiegészítette: Nagy Bálint Máté
+
 ## Előkészület
 
-Javasolt egy Linux gép használata egy web kamerával. A program Raspberry Pi-ra készült de például MacOsx alatt fejlesztettem, tehát a lényeg, hogy ha lehet Unix gépről dolgozzunk. Python 3 kell hozzá és a `requirements.txt`-ben megadott pip package-ek. Azért nem egy Raspberry Pi-t javaslok kipróbáláshoz, mert annak beállíátása körülményesebb, hiszen ARM processzorára nem minden pip package található meg (ha minden igaz akkor a dependenciák közül csak az _opencv-contrib_ problémás). Így ha ott szeretnénk, akkor ahhoz először le kell fordítani forráskódból a library-t, amit én természetesen meg is tettem, de mint már írtam, most nem javaslom, hiszen körülbelül ugyanúgy működik sima asztali gépről is.
+Javasolt egy Linux gép használata egy web kamerával. A program Raspberry Pi-ra készült de például MacOsx alatt fejlesztettem (a továbbfejlesztés pedig Ubuntu alatt történt), tehát a lényeg, hogy ha lehet Unix gépről dolgozzunk. Python 3 szükséges hozzá és a `requirements.txt`-ben megadott pip package-ek.
 
-Mivel a feltöltési méretkorlátokat túllépi a modellekkel együtt a szoftver inkább azt mutatnám be, hogy GitHub-ról letöltve, hogyan lehet elindítani a lehető leggyorsabban a szoftvert.
-
-A tanításhoz készítettem arc adat szetteket is, de azokat a méret miatt nem töltöttem fel.
+Megjegyzés: 
+- Az RPi.GPIO csomag csak Raspberry Pi eszközön fog sikeresen feltelepülni, de ez hagyományos számítógépen történő teszteléskor nem is gond
+- A cryptography csomag telepítéséhez szükség lehet a következő programok telepítésére: `sudo apt-get install build-essential libssl-dev libffi-dev python-dev`
 
 ## Telepítés
 
@@ -334,3 +336,143 @@ Train on 4796 samples, validate on 1599 samples
 #192/4796 [>.............................] - ETA: 25:52 - loss: 0.4043 - acc: 0.
 ...
 ```
+
+## A távoli elérést biztosító rendszer konfigurálása
+Az eszköz távoli eléréséhez a megfelelő Google Cloud Platform környezet kialakítása, és ide a https://github.com/nagybalint/iot-home-security-firebase repo által tartalmazott kód feltöltése szükséges.
+
+### Firebase projekt létrehozása
+Első lépésként hozzunk létre egy Firebase projektet, melyhez egy Google account szükséges. A projekt létrehozása a következő oldalon lehetséges: https://console.firebase.google.com/. A projekt szabadon elnevezhető (a projekt neve szerepelni fog annak azonosítójában, melyre később még szükség lesz), az Analytics Location számára a United States, a Cloud Firestore Location számára a us-central értéket állítsuk be.
+
+Az általam létrehozott projekt az iot-home-security-d018f azonosítót kapta, a későbbi példákban is ez fog szerepelni, az alább szerplő linkekben és konfigurációs beállításokban a saját projekt azonosítójával helyettesítendő.
+
+Ahhoz, hogy a projekt kiegészíthetővé váljon a Google Cloud Platform szolgáltatásaival, szükséges a projekthez a Blaze (pay as you go) Plan beállítása. Ehhez szükség lesz bankkártyaadatok megadására, azonban anyagi teher nagy valószínűség szerint a fejlesztés során nem fog keletkezni: a szolgáltatások ingyenes használatához rendelkezésre álló keretek többnyire olyan magasak, hogy azok elérése irreális. (Ez alól kivételt az IoT Core jelenthet, itt nagyon jó minőségben tönörített kameraképek küldése esetén könnyen lehetséges a kvóta túllépése, ami 250 MB adatforgalom per naptári hónap. Ezért tanácsos az eszköz által küldött státuszüzenetekhez 10-25 tömörítési minőségű JPEG képeket beállítani).
+
+### A szükséges API-k engedélyezése
+Amint elkészült a Blaze Plant használó Firebase projekt, a rendszer működéséhez szükséges API-k engedélyezése következik. Ehhez látogassunk el a https://console.cloud.google.com/apis/dashboard?project=iot-home-security-d018f oldalra.
+
+Kattintsuk az oldal fejlécében található Enable APIs and Services gombra, és engedélyezzük a következőket:
+- Google Cloud IoT API
+- Cloud Pub/Sub API
+
+### Service account létrehozása
+Ahhoz, hogy a Firebase képes legyen az IoT Core elérésére, egy Service Account elkészítése szükséges. Az https://console.cloud.google.com/iam-admin/serviceaccounts?folder=&organizationId=&project=iot-home-security-d018f oldalon kattintsunk a fejlécben található Create Service Account gombra.
+
+A service accountnak tetszőleges név adható (például cloud-iot-core, hiszen az ehhez való hozzáférésre szolgál), az oldal által felajánlott azonosítót fogadjuk el bátran. Az account számára leírás opcionálisan adható, például: "Admin service account for managing cloud iot core".
+
+A következő oldalon adjuk hozzá a Cloud IoT Admin role-t, majd ismét a következő oldalra navigálva a Create Key gomb megnyomásával JSON formátumban töltsük le a Service Account azonosítóit, illetve a hozzá tartozó privát kulcsot. A fájl tárolása során nagy körültekintéssel kell eljárni (például githubra ne kerüljön fel!), mert annak birtokában az IoT Core szolgáltatás használata bárki számára admin jogosultságokkal lehetséges.
+
+### A távoli elérést megvalósító szoftver feltöltése a projektbe
+A https://github.com/nagybalint/iot-home-security-firebase repoból klónozzuk le a távoli elérést biztosító rendszer felhő alapú komponensének forrását.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources $ git clone https://github.com/nagybalint/iot-home-security-firebase
+```
+
+A `functions` mappába másoljuk be az imént letöltött service account fájlt `service-account-iot-core.json` néven.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources/iot-home-security-firebase/functions (master)$ ls
+add_device.js       index.js      package-lock.json   register_mobile_user.js  send_push_notification.js      update_device_status.js
+fetch_device_id.js  package.json  register_device.js  send_command.js          service-account-iot-core.json  validate_https_token.js
+```
+
+A forrás Firebase projektbe való feltöltése egy erre a célra szolgáló program segítségével lehetséges. Ennek telepítéséhez futtassuk az `npm install -g firebase-tools` parancsot. A telepítést követően a `firebase login` parancs futtatásával jelentkezzünk be, majd válasszuk ki az előbb létrehozott projektet a `firebase use --add` parancs futtatásával.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources/iot-home-security-firebase/functions (master)$ firebase use --add
+? Which project do you want to add? iot-home-security-d018f
+? What alias do you want to use for this project? (e.g. staging) prod
+
+Created alias prod for iot-home-security-d018f.
+Now using alias prod (iot-home-security-d018f)
+```
+
+A szoftver feltöltése ezek után a `firebase deploy` parancs futtatásával végezhető el.
+
+Részletes útmutató: https://firebase.google.com/docs/hosting/quickstart
+
+## Az IoT Home Security mobilalkalmazás konfigurálása
+Ahhoz, hogy a mobilalkalmazást fel tudjuk használni a PCA eszköz távoli elérésére, először szükséges annak a felkonfigurálása, majd a megfelelő platformra történő lefordítása.
+
+### Az alkalmazás fejlesztéséhez és fordításához szükséges környezet felépítése
+Az fejlesztéshez és fordításhoz használt környezet felépítése a https://facebook.github.io/react-native/docs/getting-started oldal React Native CLI Quickstart tabján a megfelelő fejlesztő és mobil platform kiválasztása után az Installing Dependencies fejezet lépéseit követve lehetséges.
+
+Az Android platformon az Android SDK 28-as változatával történt a fejlesztés és tesztelés, így ezt mindenképp szükséges telepíteni a környezet felépítése során.
+
+### A szoftver konfigurálása
+Klónozzuk le a mobilalkalmazás forrását a https://github.com/nagybalint/iot-home-security-app repóból.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources $ git clone https://github.com/nagybalint/iot-home-security-app.git
+```
+
+Az `iot-home-security-app/IoT_Home_Security/config/firebase.json` fájl `"functions_base_url"` paraméterét állítsuk az előző pontban létrehozott, https Firebase Cloud Functions függvények elérési útjára.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources/iot-home-security-app (master)$ cat config/firebase.json 
+{ 
+    "functions_base_url": "https://us-central1-iot-home-security-d018f.cloudfunctions.net"
+}
+```
+
+Az repo gyökérkönyvtárában állva az `npm install` parancs kiadásával telepsítsük fel a  szükséges csomagokat.
+
+```
+nagybalint@tp13ubi:~/code/thesis-attachment/sources/iot-home-security-app (master)$ npm install
+```
+
+### Az alkalmazás lefordítása Android platformra
+A létrehozott Firebase projekt oldalán adjunk hozzá egy Android alkalmazást. Az https://console.firebase.google.com/project/iot-home-security-d018f/overview oldalon kattintsunk az alkalmazások hozzáadása résznél az Android ikonra, majd kövessük a felugró ablak által megjelenített utasításokat. A folyamat során szüksége van az alkalmazás Android csomagjának nevéve, mely com.iot_home_security.
+
+A Next gomb megnyomása után megjelenő képernyő felkínálja a google-services.json fájl letöltésének lehetőségét. Mentsük el a fájlt, majd lépjünk a következő képernyőre.
+
+A képernyőn látható, az alkalmazás Android platformra történő lefordításához szükséges változtatások már elvégzésre kerültek, lépjünk tovább. Az utolsó lépésként a Google megpróbálja felvenni a kapcsolatot az alkalmazással. Ez az alkalmazás Android platformra történő lefordításáig nem fog sikerülni, így nyomjuk meg a Skip this step gombot.
+
+Az imént letöltött google-service.json fájlt másoljuk be a `iot-home-security-app/IoT_Home_Security/android/app/google-services.json` mappába (írjuk felül az ott található, az iot-home-security-d018f projektet tartalmazó, megegyező nevű fájlt).
+
+Az alkalmazás teszteléséhez veló előkészületként végezzük el a https://facebook.github.io/react-native/docs/getting-started#preparing-the-android-device oldalon bemutatott lépéseket.
+
+Végezetül az alkalmazás konfigurálásának sikeressége a `react-native run-android` parancs kiadásával egy valós, vagy virtuális Android eszközön ellenőrizhető.
+
+Az alkalmazás Android platfromra történő lefordítása a következő útmutató alapján lehetséges: https://facebook.github.io/react-native/docs/signed-apk-android. Az alkalmazás fordításának végén előáll a belőle készült apk fájl.
+
+### Az alkalmazás konfigurálása iOS platform számára
+Az alkalmazás iOS platformon történő kipróbálásához egy Mac és egy (valódi vagy virtuális) iPhone használata szükséges. A fejlesztés során ezek nem álltak rendelkezésre, így az alkalmazás iOS plaformon történő futtatása előtt annak konfigurálását teljes egészében el kell végezni.
+
+A létrehozott Firebase projekt oldalán adjunk hozzá egy iOS alkalmazást a https://console.firebase.google.com/project/iot-home-security-d018f/overview oldalon. Az alkalmazás forrása iOS plaformra nem került konfigurálásra, így pontosan kövessük az összes lépést.
+
+Végezzük el a React Native Firebase csomag következő moduljainak iOS alapú telepítési útmutatóját, melyek a következő oldalról érhetők el: https://rnfirebase.io/docs/v5.x.x/getting-started
+- Authentication
+- Cloud Firestore
+- Cloud Functions
+- Cloud Messaging
+- Notifications
+- Storage
+
+A csomagok telepítése után az alkalmazás a https://facebook.github.io/react-native/docs/getting-started#running-your-react-native-application-1 oldalon található lépések segítségével tesztelhető.
+
+## MQTT kapcsolat konfigurálása a PCA rendszerben
+Az MQTT kapcsolat konfigurálása a PCA rendszerben az eszköz regisztálásához, illetve konfigurációjához használató fájl elkészítésével történik.
+
+Az alábbiakban szereplő lépések elvégzéséhez a következő programok telepítése szükséges:
+- gcloud-cli - A telepítéshez kövessük a következő oldalon szereplő lépéseket: https://cloud.google.com/sdk/docs/#deb
+- jq - `sudo apt install jq`
+
+### Konfigurációs fájl elkészítése
+Módosítsuk az `iot-home-security/src/config/test/mqtt_session_test.json` fájlt a következőképpen:
+- project_id: A létrehozott Firebase projekt azonosítója
+- registry_id: A létrehozandó IoT Core registry neve. Értéke szabadon megválasztható
+- device_id: A PCA eszköz leendő neve. Szabadon megválaszható.
+- verification_code: A PCA eszközhöz tartozó ellenőrző kód. Szabadon megválaszható, érdemes erős kódot beállítani
+
+### Az eszköz regisztrációja az IoT Core-ba
+A `gcloud init` parancs futtatásával jelentkezzünk be a programba és válasszuk ki a létrehozott Firebase projektet.
+
+A `create_registry.sh` script a registry létrehozását, a `register_device.sh` pedig az eszköz azonosítóinak legenerálását, illetve regisztrálását végzi el.
+
+```
+nagybalint@tp13ubi:~/code/iot-home-security/src/raspberry_sec/mqtt/admin_utils (develop)$ ./create_registry.sh -e test -c mqtt_session_test.json
+nagybalint@tp13ubi:~/code/iot-home-security/src/raspberry_sec/mqtt/admin_utils (develop)$ ./register_device.sh -e test -c mqtt_session_test.json -u  https://us-central1-iot-home-security-d018f.cloudfunctions.net/register_device
+```
+
+A távoli elérést biztosító rendszer ezen lépesek után használható, használatához a PCA rendszer MQTT kommunikációt tartalmazó konfigurációs fájljaiban a megfelelő projekt, registry és eszközadatok megadása szükséges.
