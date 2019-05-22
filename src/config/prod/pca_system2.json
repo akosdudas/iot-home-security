@@ -1,5 +1,6 @@
 {
     "__type__": "PCASystem",
+    "connect_mqtt": false,
     "stream_controller": {
         "__type__": "StreamController",
         "action": {
